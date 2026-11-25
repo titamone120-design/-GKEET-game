@@ -14,12 +14,69 @@
 <section id="settings" class="screen"><div class="menuCard"><button class="back" id="settingsBack">← BACK</button><h2>SETTINGS</h2><p>Sound effects <button id="soundBtn">ON</button></p><p>Difficulty <button id="difficultyBtn">NORMAL</button></p><p class="smallNote">Controls: A/D or ←/→ move • W/↑/Space jump • J punch • K kick • L special • Esc pause</p></div></section>
 <section id="records" class="screen"><div class="menuCard"><button class="back" id="recordsBack">← BACK</button><h2>YOUR RECORDS</h2><h1 id="recordLevel">1 / 20</h1><p id="recordWins" class="smallNote">Victories: 0</p><button class="primary" id="recordsPlay">CONTINUE</button></div></section>
 <main id="game" class="game"><canvas id="arena"></canvas><div class="hud"><div class="fighterHud"><div class="fighterName">GKEET</div><div class="bar"><div class="fill" id="playerBar"></div></div></div><div class="centerHud">STAGE <strong id="stageLabel">01</strong><span id="timer">60</span></div><div class="fighterHud enemy"><div class="fighterName" id="enemyName">THE RIVAL</div><div class="bar"><div class="fill" id="enemyBar"></div></div></div></div><div class="topActions"><button id="pauseBtn">Ⅱ PAUSE</button></div><div class="controls"><div class="pad"><button class="ctrl" data-key="left">◀</button><button class="ctrl" data-key="right">▶</button><button class="ctrl jump" data-key="jump">⬆</button></div><div class="attacks"><button class="ctrl hit" data-key="punch">✊</button><button class="ctrl hit" data-key="kick">🦶</button><button class="ctrl jump" data-key="special">✦</button></div></div><div class="overlay" id="overlay"><div class="overlayCard"><h2 id="overlayTitle">PAUSED</h2><p id="overlayText">Take a breath, fighter.</p><div class="rowBtns" id="overlayButtons"></div></div></div></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (()=>{
 const $=id=>document.getElementById(id),canvas=$('arena'),ctx=canvas.getContext('2d');
 const names=['ROOKIE','IRON FIST','NIGHT STALKER','RED FANG','THE BRUISER','DARK KNIGHT','BLOOD HOUND','VIPER','WAR MACHINE','THE EXECUTIONER','PHANTOM','SKULL CRUSHER','RAVEN','DEATH MARK','TITAN','HELLFIRE','WRAITH','THE BEAST','SHADOW LORD','GKEET PRIME'];
 let screen='menu',stage=1,unlocked=+(localStorage.gkeetUnlocked||1),wins=+(localStorage.gkeetWins||0),sound=true,difficulty=1,paused=false,over=false,remaining=60,last=0,raf=0;
 let W=0,H=0,ground=0,keys={},particles=[],shake=0;
+let scene3d=null,renderer3d=null,camera3d=null,world3d=null,actors3d=[];
+function init3D(){
+ if(!window.THREE)return;
+ try{
+  renderer3d=new THREE.WebGLRenderer({alpha:false,antialias:true});
+  renderer3d.setPixelRatio(Math.min(devicePixelRatio||1,2));
+  renderer3d.setSize(innerWidth,innerHeight);
+  renderer3d.shadowMap.enabled=true;renderer3d.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer3d.outputEncoding=THREE.sRGBEncoding;
+  renderer3d.domElement.id='gkeet3d';
+  renderer3d.domElement.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:0';
+  canvas.parentNode.insertBefore(renderer3d.domElement,canvas);
+  canvas.style.display='none';
+  scene3d=new THREE.Scene();scene3d.background=new THREE.Color(0x090b20);scene3d.fog=new THREE.Fog(0x090b20,18,42);
+  camera3d=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,100);camera3d.position.set(0,7,18);camera3d.lookAt(0,2,0);
+  scene3d.add(new THREE.HemisphereLight(0x9dbbff,0x25102d,2.0));
+  const key=new THREE.DirectionalLight(0xffe0c0,2.2);key.position.set(-5,10,8);key.castShadow=true;scene3d.add(key);
+  const rim=new THREE.PointLight(0x25cfff,55,25);rim.position.set(0,6,-5);scene3d.add(rim);
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,30),new THREE.MeshStandardMaterial({color:0x211b45,metalness:.35,roughness:.55}));
+  floor.rotation.x=-Math.PI/2;floor.position.y=0;floor.receiveShadow=true;scene3d.add(floor);
+  const grid=new THREE.GridHelper(36,36,0x31cfff,0x60449b);grid.position.y=.015;scene3d.add(grid);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(7,.055,8,100),new THREE.MeshBasicMaterial({color:0x23dfff}));ring.rotation.x=Math.PI/2;ring.position.y=.04;scene3d.add(ring);
+  for(let i=0;i<4;i++){const pillar=new THREE.Mesh(new THREE.CylinderGeometry(.22,.35,7,8),new THREE.MeshStandardMaterial({color:i%2?0x321c5b:0x173d59,metalness:.6,roughness:.3}));pillar.position.set(i<2?-10:10,3.5,i%2?-7: -1);scene3d.add(pillar)}
+  const mat=(c,metal=0)=>new THREE.MeshStandardMaterial({color:c,metalness:metal,roughness:.38});
+  function fighter(enemy){
+   const g=new THREE.Group(),red=enemy;
+   const skin=mat(red?0xb96d55:0xe6ae83),suit=mat(red?0x9e2039:0x147b9d,.35),dark=mat(0x151c31,.25),gold=mat(red?0xff9d38:0xffca42,.5),hair=mat(red?0x5b101e:0xffc32e);
+   const sph=(x,y,z,sx,sy,sz,m)=>{let o=new THREE.Mesh(new THREE.SphereGeometry(1,20,14),m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.castShadow=true;g.add(o);return o};
+   const limb=(a,b,r,m)=>{let d=new THREE.Vector3().subVectors(b,a),o=new THREE.Mesh(new THREE.CylinderGeometry(r*.78,r,d.length(),12),m);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());o.castShadow=true;g.add(o);return o};
+   sph(0,2.35,0,.57,.78,.34,suit);sph(0,1.63,0,.48,.18,.32,gold);
+   sph(0,3.55,0,.42,.48,.4,skin);sph(0,3.88,-.02,.45,.24,.42,hair);
+   for(let i=0;i<5;i++){let spike=sph(-.32+i*.16,4.03,0,.12,.32,.13,hair);spike.rotation.z=-.35+i*.17}
+   sph(.19,3.57,.34,.07,.045,.035,mat(0xffffff));sph(.2,3.57,.38,.025,.04,.02,mat(0x111a30));
+   const shoulders=[new THREE.Vector3(-.62,2.75,0),new THREE.Vector3(.62,2.75,0)];
+   shoulders.forEach((sh,i)=>{let elbow=new THREE.Vector3(sh.x+(i?-.08:.08),2.08,.02),hand=new THREE.Vector3(sh.x+(i?-.18:.18),1.72,.18);limb(sh,elbow,.19,skin);sph(elbow.x,elbow.y,elbow.z,.2,.2,.2,gold);limb(elbow,hand,.14,skin);sph(hand.x,hand.y,hand.z,.19,.16,.17,suit)});
+   for(let i=0;i<2;i++){let hip=new THREE.Vector3(i? .27:-.27,1.5,0),knee=new THREE.Vector3(i?.34:-.36,.82,.04),foot=new THREE.Vector3(i?.4:-.42,.18,.18);limb(hip,knee,.23,dark);sph(knee.x,knee.y,knee.z,.24,.23,.23,suit);limb(knee,foot,.17,dark);let boot=sph(foot.x,foot.y-.06,.2,.3,.16,.42,gold)}
+   g.userData={limb};scene3d.add(g);return g;
+  }
+  actors3d=[fighter(false),fighter(true)];
+  actors3d[0].position.x=-4;actors3d[1].position.x=4;actors3d[1].rotation.y=Math.PI;
+  window.addEventListener('resize',()=>{if(!renderer3d)return;renderer3d.setSize(innerWidth,innerHeight);camera3d.aspect=innerWidth/innerHeight;camera3d.updateProjectionMatrix()});
+ }catch(err){console.warn('3D renderer unavailable',err);if(renderer3d){renderer3d.domElement.remove();renderer3d=null}canvas.style.display='block'}
+}
+function draw3D(){
+ if(!renderer3d)return false;
+ const scale=14/Math.max(1,W),toX=x=>(x-W/2)*scale;
+ [p,e].forEach((f,i)=>{const a=actors3d[i],move=Math.abs(f.vx)>.4,t=performance.now()*.006;
+ a.position.x=toX(f.x);a.position.y=Math.max(0,(ground-f.y-70)*scale*.32);
+ a.rotation.y=i?Math.PI:0;
+ a.position.z=i?-.15:.15;
+ a.children.forEach((o,j)=>{if(j>8&&j<18)o.rotation.x=move?Math.sin(t+(j%3))*0.38:0});
+ if(f.attack>0){a.rotation.y+=(i?-1:1)*(f.kind==='kick'?.35:.12);a.scale.set(1.08,1,1)}else a.scale.set(1,1,1);
+ });
+ renderer3d.render(scene3d,camera3d);return true;
+}
+
 const p={x:0,y:0,vx:0,vy:0,hp:100,max:100,face:1,attack:0,kind:'',cool:0,energy:0,flash:0};
 const e={x:0,y:0,vx:0,vy:0,hp:100,max:100,face:-1,attack:0,kind:'',cool:0,flash:0};
 function show(which){document.querySelectorAll('.screen,.game').forEach(x=>x.classList.remove('active'));$(which).classList.add('active');screen=which}
@@ -98,6 +155,7 @@ if(attacking){ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor=
 ctx.restore();
 }
 function draw(){
+if(draw3D())return;
 ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
 const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#100b36');sky.addColorStop(.52,'#24145a');sky.addColorStop(1,'#090a20');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
 // moon, stars and distant mountains
@@ -122,6 +180,6 @@ $('playBtn').onclick=()=>start(Math.min(unlocked,20));$('levelsBtn').onclick=()=
 $('soundBtn').onclick=()=>{sound=!sound;$('soundBtn').textContent=sound?'ON':'OFF'};$('difficultyBtn').onclick=()=>{difficulty=difficulty===1?1.35:difficulty===1.35?.8:1;$('difficultyBtn').textContent=difficulty===1?'NORMAL':difficulty>1?'HARD':'EASY'};
 document.querySelectorAll('[data-key]').forEach(b=>{let k=b.dataset.key;const down=e=>{e.preventDefault();keys[k]=true};const up=e=>{e.preventDefault();keys[k]=false};b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)});
 const keymap={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'jump',w:'jump',' ':'jump',j:'punch',k:'kick',l:'special'};addEventListener('keydown',ev=>{let k=keymap[ev.key]||keymap[ev.key.toLowerCase()];if(k){ev.preventDefault();keys[k]=true}if(ev.key==='Escape')pause()});addEventListener('keyup',ev=>{let k=keymap[ev.key]||keymap[ev.key.toLowerCase()];if(k)keys[k]=false});
-document.addEventListener('contextmenu',e=>e.preventDefault());menu();
+document.addEventListener('contextmenu',e=>e.preventDefault());init3D();menu();
 })();
 </script></body></html>
