@@ -215,7 +215,7 @@ ctx.restore();
 function draw(){
 if(draw3D())return;
 ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
-const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#100b36');sky.addColorStop(.52,'#24145a');sky.addColorStop(1,'#090a20');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+const palettes=[['#100b36','#24145a','#090a20'],['#3b101a','#672036','#13080f'],['#09263c','#155276','#071522'],['#281431','#56305b','#100b20']];const palette=palettes[Math.floor((stage-1)/5)%palettes.length];const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,palette[0]);sky.addColorStop(.52,palette[1]);sky.addColorStop(1,palette[2]);ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
 // moon, stars and distant mountains
 ctx.fillStyle='#a99aff33';ctx.beginPath();ctx.arc(W*.77,H*.24,Math.min(W,H)*.12,0,Math.PI*2);ctx.fill();
 for(let i=0;i<42;i++){let x=(i*97%W),y=(i*53%(Math.max(100,H*.52)));ctx.fillStyle=i%3===0?'#75eaff':'#fff';ctx.globalAlpha=.35+(i%5)*.12;ctx.fillRect(x,y,2,2)}ctx.globalAlpha=1;
