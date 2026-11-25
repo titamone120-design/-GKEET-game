@@ -24,6 +24,8 @@ jobs:
         run: npm install
       - name: Bundle Three.js for offline 3D gameplay
         run: mkdir -p www/vendor && cp node_modules/three/build/three.min.js www/vendor/three.min.js
+      - name: Validate game JavaScript syntax
+        run: node -e "const fs=require('fs');const h=fs.readFileSync('www/index.html','utf8');const scripts=[...h.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(m=>m[1]).filter(s=>s.trim());scripts.forEach(s=>new Function(s));console.log('Game JavaScript syntax OK')"
       - name: Add Android platform
         run: npx cap add android
       - name: Build debug APK
