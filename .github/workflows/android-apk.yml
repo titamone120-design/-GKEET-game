@@ -22,6 +22,8 @@ jobs:
           java-version: 21
       - name: Install dependencies
         run: npm install
+      - name: Bundle Three.js for offline 3D gameplay
+        run: mkdir -p www/vendor && cp node_modules/three/build/three.min.js www/vendor/three.min.js
       - name: Add Android platform
         run: npx cap add android
       - name: Build debug APK
