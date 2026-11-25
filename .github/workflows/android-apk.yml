@@ -28,6 +28,8 @@ jobs:
         run: node -e "const fs=require('fs');const h=fs.readFileSync('www/index.html','utf8');const scripts=[...h.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(m=>m[1]).filter(s=>s.trim());scripts.forEach(s=>new Function(s));console.log('Game JavaScript syntax OK')"
       - name: Add Android platform
         run: npx cap add android
+      - name: Set fighting game to landscape orientation
+        run: sed -i 's/android:name=".MainActivity"/android:name=".MainActivity" android:screenOrientation="landscape"/' android/app/src/main/AndroidManifest.xml
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
