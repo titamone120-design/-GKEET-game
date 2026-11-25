@@ -125,11 +125,11 @@ function draw3D(){
  const scale=14/Math.max(1,W),toX=x=>(x-W/2)*scale,now=performance.now()*.006;
  [p,e].forEach((f,i)=>{const a=actors3d[i],moving=Math.abs(f.vx)>.35,phase=now*(moving?2.5:1);
  a.position.x=toX(f.x);a.position.y=Math.max(0,(ground-f.y-70)*scale*.32);a.position.z=i?-.15:.15;a.rotation.y=i?Math.PI:0;
- const swing=moving?Math.sin(phase)*.48:Math.sin(phase)*.025,attacking=f.attack>0,kicking=attacking&&f.kind==='kick',special=attacking&&f.kind==='special';
+ const swing=moving?Math.sin(phase)*.48:Math.sin(phase)*.025,attacking=f.attack>0,kicking=attacking&&f.kind==='kick',special=attacking&&f.kind==='special',hitReact=f.flash>0;
  a.rotation.y=f.face>0?Math.PI/2:-Math.PI/2;
  a.userData.legs.forEach((l,j)=>{const lead=j===0;l.hip.rotation.x=kicking&&lead?-.95:(lead?1:-1)*swing;l.knee.rotation.x=kicking&&lead?.5:moving?Math.max(0,Math.sin(phase+(j?Math.PI:0)))*.7:0});
- a.userData.arms.forEach(arm=>{const back=arm.side===-1;arm.shoulder.rotation.x=attacking?(special?-1.05:kicking?-.18:-1.25):f.guard?-.72:(back?-.12:.08)+swing*(back?-.4:.35);arm.shoulder.rotation.z=arm.side*(attacking?(special?.48:.18):f.guard?.58:.08);arm.elbow.rotation.x=attacking?(special?-.25:-.45):f.guard?-.85:Math.max(0,-swing)*.35;arm.wrist.rotation.x=attacking?-.15:f.guard?-.3:0});
- a.userData.torso.rotation.z=moving?Math.sin(phase)*.035:attacking?.055:0;a.userData.head.rotation.y=Math.sin(phase*.45)*.04;
+ a.userData.arms.forEach(arm=>{const back=arm.side===-1;arm.shoulder.rotation.x=attacking?(special?-1.05:kicking?-.18:-1.25):f.guard?-.72:hitReact?-.42:(back?-.12:.08)+swing*(back?-.4:.35);arm.shoulder.rotation.z=arm.side*(attacking?(special?.48:.18):f.guard?.58:.08);arm.elbow.rotation.x=attacking?(special?-.25:-.45):f.guard?-.85:Math.max(0,-swing)*.35;arm.wrist.rotation.x=attacking?-.15:f.guard?-.3:0});
+ a.userData.torso.rotation.z=hitReact?Math.sin(now*3)*.11:moving?Math.sin(phase)*.035:attacking?.055:0;a.userData.head.rotation.y=Math.sin(phase*.45)*.04+(hitReact?.12:0);
  if(attacking)a.scale.set(1.02,1,1);else a.scale.set(1,1,1);
  });
  renderer3d.render(scene3d,camera3d);return true;
