@@ -74,6 +74,11 @@ const server = http.createServer((req, res) => {
 
     // Exercise the separate Battle Strike shooter mode as well as the classic fighter.
     await page.goto(`http://127.0.0.1:${address.port}/shooter.html`, { waitUntil: 'load' });
+    await page.locator('#choose').click();
+    await page.waitForFunction(() => document.querySelector('#maps').classList.contains('on'));
+    assert.equal(await page.locator('#mapGrid button').count(), 20, 'all 20 Battle Strike zones should be listed');
+    assert.ok(await page.locator('#mapGrid button').first().isEnabled(), 'first Battle Strike zone should be unlocked');
+    await page.locator('#back').click();
     await page.locator('#quick').click();
     await page.waitForFunction(() => document.querySelector('#game').classList.contains('on'));
     assert.ok(await page.locator('#view').evaluate(el => el.width > 0 && el.height > 0), 'shooter canvas must be initialized');
@@ -108,9 +113,27 @@ const server = http.createServer((req, res) => {
     assert.ok(await page.locator('#overlay').evaluate(el => el.classList.contains('on')), 'shooter pause overlay must open');
     await page.locator('#resume').click();
     assert.ok(!(await page.locator('#overlay').evaluate(el => el.classList.contains('on'))), 'shooter resume must close overlay');
+
+    // Verify the mobile touch control path and the dedicated training mode.
+    const touchStart = await page.evaluate(() => window.__gkeetShooterDebug().x);
+    const rightPad = page.locator('[data-k="right"]');
+    await rightPad.dispatchEvent('pointerdown', { pointerId: 7, pointerType: 'touch', isPrimary: true });
+    await page.waitForTimeout(220);
+    await rightPad.dispatchEvent('pointerup', { pointerId: 7, pointerType: 'touch', isPrimary: true });
+    const touchMoved = await page.evaluate(() => window.__gkeetShooterDebug().x);
+    assert.ok(touchMoved > touchStart + 10, 'mobile right touch control should move the player');
+
+    await page.locator('#pause').click();
+    await page.locator('#homeBtn').click();
+    await page.locator('#training').click();
+    const practice = await page.evaluate(() => window.__gkeetShooterDebug());
+    assert.equal(practice.level, 1, 'training should start in zone one');
+    assert.equal(practice.enemyCount, 2, 'training should spawn the reduced practice enemy set');
+    assert.ok(await page.locator('#mapName').textContent().then(text => text.includes('WAVE 1/1')), 'training should use a single practice wave');
+
     await page.waitForTimeout(250);
     assert.deepEqual(pageErrors, [], 'browser must not report uncaught JavaScript errors');
-    console.log('GKEET smoke test passed: classic fighter and Battle Strike launch, controls, pause/resume, and 20-stage menu.');
+    console.log('GKEET smoke test passed: classic fighter, 20-stage menus, Battle Strike movement/jump/landing/fire, touch controls, training, and pause/resume.');
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));
