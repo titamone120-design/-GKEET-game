@@ -33,7 +33,7 @@ jobs:
           npm install
           mkdir -p www/models www/vendor
           cp /tmp/gkeet-cc0-assets/KinemIQ_Mannequin.glb www/models/
-          for clip in Idle_relaxed Walk_forwards Punch_jab_left_2 Punch_cross_right_2 Punch_hook_right_2 Hit_knockback Hit_to_the_head Jump_take_off Jump_in_the_air Jump_landing Dodge_roll; do
+          for clip in Idle_relaxed Idle_arms_folded_waiting Walk_forwards Punch_jab_left_2 Punch_cross_right_2 Punch_hook_right_2 Hit_knockback Hit_to_the_head Jump_take_off Jump_in_the_air Jump_landing Dodge_roll; do
             cp "/tmp/gkeet-cc0-assets/GLB/${clip}.glb" "www/models/${clip}.glb"
           done
           cp node_modules/three/examples/js/loaders/GLTFLoader.js www/vendor/GLTFLoader.js
