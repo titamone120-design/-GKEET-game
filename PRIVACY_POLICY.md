@@ -2,31 +2,37 @@
 
 **Last updated:** 26 November 2026
 
-GKEET is an offline 3D fighting game.
+GKEET includes offline game modes and an online-room feature that is being prepared for release. This policy describes the online data flows when that feature is enabled.
 
-## Information we collect
+## Information used for online play
 
-GKEET does not collect, transmit, sell, or share personal information. The game does not require an account and does not request access to contacts, location, camera, microphone, photos, or files.
+If you create an online account, GKEET processes the email address and authentication information needed to create and secure your account. Passwords are handled by Supabase Authentication and are not stored in the GKEET game database.
+
+When you enter an online room, GKEET processes your player name, room identifier, room invite code, membership, and temporary online-presence information so that other members of the same room can see who is connected. Room capacity is limited to six players. Do not use your real name as your player name.
+
+## Service provider
+
+Online account, room and real-time connection services are provided by Supabase using a project dedicated to GKEET. The GKEET backend is separate from IMSIYA. Supabase processes this information to provide authentication, database and Realtime services under its own privacy and security terms.
 
 ## Data stored on your device
 
-The game stores gameplay progress, unlocked stages, victory counts, sound preferences, and difficulty preferences locally on your device so that they remain available when you reopen the game. This information is not sent to the developer or to another service.
+Gameplay progress, unlocked stages, sound preferences and difficulty preferences are stored locally on your device. Online authentication sessions may also be stored by the Supabase client so you can remain signed in.
 
-You can clear this locally stored game data by clearing GKEET's app storage or uninstalling the app.
+You can clear locally stored game data by clearing GKEET app storage or uninstalling the app. To request deletion of an online account, use the support contact below until an in-game account deletion feature is provided.
 
-## Internet and third parties
+## Internet, advertising and analytics
 
-Core gameplay works offline. GKEET does not include advertising SDKs, analytics SDKs, or third-party account services.
+Offline gameplay can be played without an account. Online rooms require an internet connection. The current online-room integration does not include advertising or analytics SDKs.
 
 ## Children
 
-GKEET does not knowingly collect personal information from children or other users.
+Parents or guardians should supervise children's use of online accounts and communication features. Do not share personal contact details in player names or room communications.
 
 ## Changes to this policy
 
-If a future version adds online features or changes the way information is handled, this policy will be updated before that version is released.
+This policy will be revised if GKEET adds additional online data processing, advertising, analytics, payments or other third-party services.
 
 ## Contact
 
-For questions or support, use the project's GitHub Issues page:
+For questions, support or account deletion requests, use the project's GitHub Issues page:
 https://github.com/titamone120-design/-GKEET-game/issues
