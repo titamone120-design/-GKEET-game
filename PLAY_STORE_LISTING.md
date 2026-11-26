@@ -4,7 +4,7 @@
 GKEET: Shadow Arena
 
 ## Short description
-Fight through 20 rivals in a 3D arena. Master punches, kicks, blocks and special moves.
+Fight 20 rivals in a 3D arena with punches, kicks, blocks and special moves.
 
 ## Full description
 Enter the arena and fight your way through 20 progressively tougher rivals in GKEET: Shadow Arena.
