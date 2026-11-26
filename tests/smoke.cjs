@@ -50,7 +50,12 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#timer').textContent(), pausedAt, 'timer must stop while paused');
 
     await page.getByRole('button', { name: 'RESUME' }).click();
-    await page.waitForFunction((previous) => Number(document.querySelector('#timer').textContent) < Number(previous), pausedAt, { timeout: 7000 });
+    try {
+      await page.waitForFunction((previous) => Number(document.querySelector('#timer').textContent) < Number(previous), pausedAt, { timeout: 7000 });
+    } catch (error) {
+      console.error('GKEET state after resume:', await page.evaluate(() => window.__gkeetDebug()));
+      throw error;
+    }
     assert.ok(Number(await page.locator('#timer').textContent()) < Number(pausedAt), 'timer should resume');
 
     await page.locator('#pauseBtn').click();
