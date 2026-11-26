@@ -87,6 +87,33 @@
     await enterRoom(result.data, code);
     if (channel) await channel.send({ type: "broadcast", event: "room_refresh", payload: { at: Date.now() } });
   }
+  async function quickMatch() {
+    if (!session) { authMessage("Sign in to find an online match."); return; }
+    const name = $("lobbyPlayerName").value.trim() || $("onlineName").value.trim() || "Player";
+    roomMessage("Searching for an open room…");
+    const found = await client.from("gkeet_rooms")
+      .select("id,code,owner_id")
+      .eq("status", "waiting")
+      .neq("owner_id", session.user.id)
+      .limit(1)
+      .maybeSingle();
+    if (found.error) { roomMessage("Quick Match could not search rooms: " + found.error.message); return; }
+    if (!found.data) {
+      roomMessage("No open room found. Creating a room for another player to join…");
+      await createRoom();
+      return;
+    }
+    const joined = await client.rpc("gkeet_join_room_by_code", {
+      p_code: found.data.code, p_player_name: name
+    });
+    if (joined.error) {
+      roomMessage("That room filled just now. Tap Quick Match to search again.");
+      return;
+    }
+    await enterRoom(joined.data, found.data.code);
+    if (channel) await channel.send({ type: "broadcast", event: "room_refresh", payload: { at: Date.now() } });
+    roomMessage("MATCH FOUND • Waiting for the room owner to start.");
+  }
   async function startOnlineMatch() {
     if (!room || !session || room.owner_id !== session.user.id) return;
     const members = await client.from("gkeet_room_members").select("user_id").eq("room_id", room.id);
@@ -138,7 +165,7 @@
   };
   $("createRoom").onclick = createRoom;
   $("startOnlineMatch").onclick = startOnlineMatch;
-  $("quickRoom").onclick = createRoom;
+  $("quickRoom").onclick = quickMatch;
   $("joinRoom").onclick = joinRoom;
   $("leaveRoom").onclick = leaveRoom;
   $("copyRoomCode").onclick = async () => {
