@@ -83,6 +83,13 @@ jobs:
           echo "Relevant kick/library/export API references:"
           grep -RniE 'kq-ajax|wp-json|animation|library|export|glb|fetch\(' /tmp/kinemiq-js | head -120 || true
 
+      - name: Upload KinemIQ Studio scripts for offline API inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: KinemIQ-Studio-Scripts
+          path: /tmp/kinemiq-js
+          if-no-files-found: error
+
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
           set -euo pipefail
