@@ -12,7 +12,7 @@ Open `www/index.html` in a modern browser, or serve `www/` with a static web ser
 
 ## Features
 - 20 progressively harder rivals with stage-based enemy strength and visual themes.
-- Rigged humanoid 3D fighters with skeletal idle, walk, punch, hook, hit-reaction, jump, dodge and guard animations.
+- Rigged humanoid 3D fighters with skeletal idle, walk, punch, real kick, hook, hit-reaction, jump, dodge and guard animations.
 - Health and special-energy bars, combo counter, timer, hit effects, knockback and enemy AI.
 - Stage unlocks, wins, sound preference and difficulty saved on the device.
 - Offline Android build; Three.js, GLTFLoader, fighter models and animation clips are bundled locally.
