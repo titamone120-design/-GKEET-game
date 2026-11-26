@@ -35,6 +35,12 @@ jobs:
           mkdir -p www/vendor
           cp node_modules/three/build/three.min.js www/vendor/three.min.js
 
+      - name: Install Chromium for gameplay tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Run GKEET browser gameplay smoke test
+        run: npm run test:smoke
+
       - name: Validate game JavaScript
         run: |
           node <<'NODE'
