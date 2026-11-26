@@ -83,3 +83,10 @@ jobs:
             www/models
             www/vendor/GLTFLoader.js
           if-no-files-found: error
+
+      - name: Upload Quaternius UAL2 archive for rig compatibility review
+        uses: actions/upload-artifact@v4
+        with:
+          name: GKEET-Quaternius-UAL2
+          path: /tmp/ual2-standard
+          if-no-files-found: error
