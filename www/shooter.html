@@ -153,49 +153,58 @@ for(let i=0;i<Math.ceil(worldWidth/430);i++){let x=i*430+190;c.fillStyle='#59614
  // bright glowing bullet tracers
 for(let b of bullets){let sx=b.x-cam,sy=b.y,angle=Math.atan2(b.vy,b.vx),length=b.enemy?15:25;c.save();c.translate(sx,sy);c.rotate(angle);c.strokeStyle=b.enemy?'#ff5252':'#fff2a0';c.lineWidth=b.enemy?4:5;c.lineCap='round';c.shadowColor=b.enemy?'#ff3028':'#ffb52e';c.shadowBlur=18;c.beginPath();c.moveTo(-length*.65,0);c.lineTo(length*.55,0);c.stroke();c.strokeStyle=b.enemy?'#ffaaa0':'#ffffff';c.lineWidth=1.5;c.beginPath();c.moveTo(-length*.4,0);c.lineTo(length*.4,0);c.stroke();c.restore()}c.shadowBlur=0;for(let p of pickups){c.save();c.translate(p.x-cam,p.y);c.fillStyle=p.type==='health'?'#27e58b':'#ffd35c';c.shadowColor=c.fillStyle;c.shadowBlur=14;c.beginPath();c.arc(0,0,11,0,Math.PI*2);c.fill();c.shadowBlur=0;c.fillStyle='#102033';c.font='bold 14px Arial';c.textAlign='center';c.fillText(p.type==='health'?'+':'A',0,5);c.restore()}
 function soldier(x,y,face,foe,hp,max,boss=false,remote=false,remoteName='ONLINE'){
- c.save();c.translate(x,y);c.scale(face,1);if(boss)c.scale(1.32,1.32);
- const t=performance.now()/100,phase=t+(foe?1.7:0),bob=Math.sin(phase*1.8)*1.2,step=Math.sin(phase*2.8)*4.2;
- const outfit=style.outfit==='street'?['#3d6c86','#203d52','#e8c66b']:style.outfit==='desert'?['#9a7848','#59452e','#e9c77d']:['#315b48','#1b382e','#d6bd78'];const suit=foe?'#78283a':remote?'#087c85':outfit[0],dark=foe?'#351b29':remote?'#102638':outfit[1],trim=foe?'#ff6678':remote?'#54f5e5':outfit[2],skin=foe?'#d99578':'#b97855';
- // ground shadow
- c.fillStyle='#0009';c.beginPath();c.ellipse(0,2,24,6,0,0,Math.PI*2);c.fill();
- // boots and animated legs
+ c.save();c.translate(x,y);c.scale(face,1);if(boss)c.scale(1.22,1.22);
+ const t=performance.now()/100,phase=t+(foe?1.7:0),bob=Math.sin(phase*1.8)*1.1,step=Math.sin(phase*2.8)*3.8;
+ const outfit=style.outfit==='street'?{shirt:'#416b83',pants:'#253b50',vest:'#344e60',accent:'#e8c66b'}:style.outfit==='desert'?{shirt:'#aa8955',pants:'#655033',vest:'#75613e',accent:'#ead29a'}:{shirt:'#41664b',pants:'#263d31',vest:'#354c3b',accent:'#d5bd79'};
+ const shirt=foe?'#8e3548':remote?'#247d83':outfit.shirt,pants=foe?'#402735':remote?'#174d57':outfit.pants,vest=foe?'#552b38':remote?'#15515a':outfit.vest,accent=foe?'#f07883':remote?'#7cf0dc':outfit.accent,skin=foe?'#b9785b':'#a96f50',boot='#171d22';
+ // soft ground shadow
+ c.fillStyle='#0007';c.beginPath();c.ellipse(0,1,23,5,0,0,Math.PI*2);c.fill();
+ // legs: articulated trousers, knees, seams and boots
  c.lineCap='round';c.lineJoin='round';
- c.strokeStyle=dark;c.lineWidth=9;c.beginPath();c.moveTo(-6,-21);c.lineTo(-8+step,-10);c.lineTo(-13+step,-3);c.moveTo(6,-21);c.lineTo(8-step,-10);c.lineTo(13-step,-3);c.stroke();
- c.strokeStyle=foe?'#a64a52':'#55758b';c.lineWidth=3;c.beginPath();c.moveTo(-8+step,-10);c.lineTo(-13+step,-3);c.moveTo(8-step,-10);c.lineTo(13-step,-3);c.stroke();
- c.fillStyle='#090f18';c.beginPath();c.roundRect(-19+step,-7,13,7,2);c.roundRect(7-step,-7,14,7,2);c.fill();
- c.fillStyle=trim;c.fillRect(-17+step,-3,8,2);c.fillRect(10-step,-3,8,2);
- // torso silhouette and shoulder armor
- c.fillStyle=suit;c.beginPath();c.moveTo(-10,-53+bob);c.lineTo(10,-53+bob);c.lineTo(15,-44+bob);c.lineTo(12,-22+bob);c.lineTo(-12,-22+bob);c.lineTo(-15,-44+bob);c.closePath();c.fill();
- c.fillStyle=dark;c.beginPath();c.moveTo(-8,-48+bob);c.lineTo(8,-48+bob);c.lineTo(9,-26+bob);c.lineTo(-9,-26+bob);c.closePath();c.fill();
- c.fillStyle=trim;c.beginPath();c.moveTo(-11,-50+bob);c.lineTo(-7,-50+bob);c.lineTo(-7,-27+bob);c.lineTo(-11,-27+bob);c.fill();
- c.fillStyle='#536b7b';c.fillRect(-6,-48+bob,12,2);c.fillRect(-6,-27+bob,12,2);
- // tactical vest, chest plates and ammunition pouches
- c.fillStyle=foe?'#542331':'#18364b';c.fillRect(-7,-45+bob,14,17);
- c.strokeStyle=trim;c.lineWidth=1.5;c.strokeRect(-6,-44+bob,12,15);
- c.fillStyle='#d6e4e9';c.fillRect(-2,-41+bob,4,4);
- c.fillStyle=dark;c.fillRect(-12,-34+bob,6,7);c.fillRect(6,-34+bob,6,7);
- c.fillStyle=trim;c.fillRect(-11,-33+bob,4,2);c.fillRect(7,-33+bob,4,2);
- c.fillStyle='#111d2b';c.fillRect(-5,-23+bob,10,4);
- // arms with shoulder pads, forearms and gloves
- c.strokeStyle=skin;c.lineWidth=6;c.beginPath();c.moveTo(-12,-46+bob);c.lineTo(-17,-37+bob+step*.25);c.lineTo(-12,-30+bob);c.moveTo(12,-46+bob);c.lineTo(18,-39+bob-step*.2);c.lineTo(20,-34+bob);c.stroke();
- c.fillStyle=foe?'#a53c50':'#607d91';c.beginPath();c.arc(-13,-45+bob,5,0,Math.PI*2);c.arc(13,-45+bob,5,0,Math.PI*2);c.fill();
- c.fillStyle=dark;c.beginPath();c.arc(-12,-30+bob,4,0,Math.PI*2);c.arc(20,-34+bob,4,0,Math.PI*2);c.fill();
- // neck, face and detailed combat helmet
- c.fillStyle=skin;c.fillRect(-4,-57+bob,8,7);
- c.fillStyle=skin;c.beginPath();c.ellipse(0,-65+bob,8.5,10,0,0,Math.PI*2);c.fill();
- c.fillStyle='#302019';c.beginPath();c.arc(-3,-67+bob,1.1,0,Math.PI*2);c.arc(3,-67+bob,1.1,0,Math.PI*2);c.fill();
- c.strokeStyle='#633d2d';c.lineWidth=1;c.beginPath();c.moveTo(-3,-61+bob);c.quadraticCurveTo(0,-59+bob,3,-61+bob);c.stroke();
- if(foe){c.fillStyle='#321724';c.beginPath();c.arc(0,-69+bob,10,Math.PI,Math.PI*2);c.fill();c.fillRect(-10,-69+bob,20,3)}
- else if(style.head==='kufi'){c.fillStyle='#eee9d8';c.beginPath();c.ellipse(0,-73+bob,10,5,0,Math.PI,Math.PI*2);c.fill();c.fillRect(-10,-73+bob,20,4);c.strokeStyle='#b8a982';c.lineWidth=1;c.beginPath();c.moveTo(-7,-73+bob);c.lineTo(7,-73+bob);c.stroke()}
- else if(style.head==='cap'){c.fillStyle='#243b30';c.beginPath();c.arc(0,-70+bob,10,Math.PI,Math.PI*2);c.fill();c.fillRect(-10,-70+bob,20,3);c.fillRect(2,-68+bob,12,2)}
- else {c.fillStyle='#302019';c.beginPath();if(style.hair==='curly'){c.arc(-5,-70+bob,5,Math.PI,Math.PI*2);c.arc(0,-72+bob,5,Math.PI,Math.PI*2);c.arc(5,-70+bob,5,Math.PI,Math.PI*2)}else{c.arc(0,-70+bob,9,Math.PI,Math.PI*2)}c.fill();c.fillRect(-8,-70+bob,16,3)}
- c.fillStyle=skin;c.beginPath();c.arc(-8,-64+bob,2.2,0,Math.PI*2);c.arc(8,-64+bob,2.2,0,Math.PI*2);c.fill();
- // radio backpack and straps
- c.fillStyle=foe?'#512331':'#173247';c.fillRect(-19,-49+bob,7,19);c.fillStyle=trim;c.fillRect(-18,-46+bob,5,3);
- c.strokeStyle='#9bb2bf';c.lineWidth=1.3;c.beginPath();c.moveTo(-8,-49+bob);c.lineTo(-4,-24+bob);c.moveTo(8,-49+bob);c.lineTo(4,-24+bob);c.stroke();
- // rifle held in front, with stock, barrel, sight and magazine
- c.fillStyle='#080f18';c.fillRect(12,-40+bob,25,5);c.fillRect(33,-39+bob,12,2);c.fillRect(19,-35+bob,5,7);c.fillRect(14,-42+bob,5,2);
- c.fillStyle=trim;c.fillRect(24,-42+bob,8,2);c.fillStyle='#718493';c.fillRect(39,-40+bob,5,1);
+ c.strokeStyle=pants;c.lineWidth=9;c.beginPath();c.moveTo(-5,-25+bob);c.lineTo(-7+step,-13+bob);c.lineTo(-11+step,-5);c.moveTo(5,-25+bob);c.lineTo(7-step,-13+bob);c.lineTo(11-step,-5);c.stroke();
+ c.strokeStyle=foe?'#a75b68':'#71816b';c.lineWidth=1.5;c.beginPath();c.moveTo(-7+step,-16+bob);c.lineTo(-9+step,-12+bob);c.moveTo(7-step,-16+bob);c.lineTo(9-step,-12+bob);c.stroke();
+ c.fillStyle=vest;c.fillRect(-11+step,-11+bob,7,4);c.fillRect(4-step,-11+bob,7,4);
+ c.fillStyle=boot;c.beginPath();c.roundRect(-18+step,-7,14,7,2);c.roundRect(5-step,-7,14,7,2);c.fill();
+ c.fillStyle='#6c7775';c.fillRect(-16+step,-3,10,1);c.fillRect(7-step,-3,10,1);
+ c.fillStyle=accent;c.fillRect(-17+step,-7,3,3);c.fillRect(13-step,-7,3,3);
+ // torso and shoulders, shaped like a human upper body
+ c.fillStyle=shirt;c.beginPath();c.moveTo(-8,-54+bob);c.quadraticCurveTo(-13,-52+bob,-15,-44+bob);c.lineTo(-12,-27+bob);c.quadraticCurveTo(0,-23+bob,12,-27+bob);c.lineTo(15,-44+bob);c.quadraticCurveTo(13,-52+bob,8,-54+bob);c.closePath();c.fill();
+ // collar and neck
+ c.fillStyle=skin;c.fillRect(-4,-59+bob,8,9);
+ c.fillStyle=vest;c.beginPath();c.moveTo(-8,-52+bob);c.lineTo(8,-52+bob);c.lineTo(10,-29+bob);c.lineTo(-10,-29+bob);c.closePath();c.fill();
+ c.strokeStyle=accent;c.lineWidth=1.3;c.beginPath();c.moveTo(-6,-49+bob);c.lineTo(-3,-30+bob);c.moveTo(6,-49+bob);c.lineTo(3,-30+bob);c.stroke();
+ // shoulder seams and tactical chest pockets
+ c.fillStyle=shirt;c.beginPath();c.ellipse(-12,-47+bob,5,6,-.25,0,Math.PI*2);c.ellipse(12,-47+bob,5,6,.25,0,Math.PI*2);c.fill();
+ c.fillStyle=pants;c.fillRect(-7,-45+bob,14,14);
+ c.strokeStyle=accent;c.lineWidth=1;c.strokeRect(-6,-44+bob,12,12);
+ c.fillStyle='#252c2b';c.fillRect(-5,-42+bob,4,5);c.fillRect(1,-42+bob,4,5);
+ c.fillStyle=accent;c.fillRect(-4,-41+bob,2,3);c.fillRect(2,-41+bob,2,3);
+ // waist belt, buckle and side utility pouches
+ c.fillStyle='#171e20';c.fillRect(-11,-28+bob,22,4);c.fillStyle=accent;c.fillRect(-2,-28+bob,4,4);
+ c.fillStyle=vest;c.fillRect(-15,-29+bob,4,7);c.fillRect(11,-29+bob,4,7);
+ c.strokeStyle='#9a9b80';c.lineWidth=1;c.strokeRect(-15,-29+bob,4,7);c.strokeRect(11,-29+bob,4,7);
+ // arms: upper sleeves, forearms, elbows and visible hands
+ c.strokeStyle=shirt;c.lineWidth=7;c.beginPath();c.moveTo(-13,-47+bob);c.lineTo(-17,-39+bob+step*.18);c.lineTo(-13,-33+bob);c.moveTo(13,-47+bob);c.lineTo(18,-40+bob-step*.18);c.lineTo(21,-35+bob);c.stroke();
+ c.fillStyle=skin;c.lineCap='round';c.lineWidth=5;c.beginPath();c.moveTo(-17,-39+bob+step*.18);c.lineTo(-13,-33+bob);c.moveTo(18,-40+bob-step*.18);c.lineTo(21,-35+bob);c.stroke();
+ c.fillStyle=skin;c.beginPath();c.ellipse(-13,-32+bob,3,4,0,0,Math.PI*2);c.ellipse(21,-34+bob,3,4,0,0,Math.PI*2);c.fill();
+ // backpack, shoulder straps and radio aerial
+ c.fillStyle=pants;c.beginPath();c.roundRect(-20,-50+bob,7,20,2);c.fill();c.fillStyle=accent;c.fillRect(-19,-46+bob,5,3);c.fillRect(-19,-40+bob,5,2);
+ c.strokeStyle='#b5b39a';c.lineWidth=1.2;c.beginPath();c.moveTo(-8,-51+bob);c.lineTo(-4,-28+bob);c.moveTo(8,-51+bob);c.lineTo(4,-28+bob);c.stroke();
+ c.strokeStyle='#222b28';c.lineWidth=1;c.beginPath();c.moveTo(-17,-49+bob);c.lineTo(-20,-58+bob);c.stroke();
+ // face, ears, nose, eyes and mouth (no robot visor)
+ c.fillStyle=skin;c.beginPath();c.ellipse(0,-66+bob,8.2,10,0,0,Math.PI*2);c.fill();
+ c.fillStyle=skin;c.beginPath();c.arc(-8,-65+bob,2.1,0,Math.PI*2);c.arc(8,-65+bob,2.1,0,Math.PI*2);c.fill();
+ c.fillStyle='#29211c';c.beginPath();c.arc(-3,-68+bob,1,0,Math.PI*2);c.arc(3,-68+bob,1,0,Math.PI*2);c.fill();
+ c.strokeStyle='#684335';c.lineWidth=1;c.beginPath();c.moveTo(0,-66+bob);c.lineTo(-.7,-63+bob);c.moveTo(-2.5,-60+bob);c.quadraticCurveTo(0,-59+bob,2.5,-60+bob);c.stroke();
+ // hair and selected headwear; enemies have their own dark hair
+ if(foe){c.fillStyle='#29201d';c.beginPath();c.arc(0,-71+bob,9,Math.PI,Math.PI*2);c.fill();c.fillRect(-8,-71+bob,16,3)}
+ else if(style.head==='kufi'){c.fillStyle='#f1ead8';c.beginPath();c.ellipse(0,-73+bob,9.5,5,0,Math.PI,Math.PI*2);c.fill();c.fillRect(-9.5,-73+bob,19,3.5);c.strokeStyle='#b6a887';c.lineWidth=.8;c.beginPath();c.moveTo(-7,-72+bob);c.lineTo(7,-72+bob);c.stroke()}
+ else if(style.head==='cap'){c.fillStyle='#263d30';c.beginPath();c.arc(0,-70+bob,9.5,Math.PI,Math.PI*2);c.fill();c.fillRect(-9,-70+bob,19,3);c.fillRect(2,-68+bob,12,2)}
+ else {c.fillStyle='#302019';c.beginPath();if(style.hair==='curly'){for(let q=-7;q<=7;q+=3.5)c.arc(q,-71+bob,3.7,Math.PI,Math.PI*2)}else if(style.hair==='fade'){c.arc(0,-70+bob,8,Math.PI,Math.PI*2)}else{c.arc(0,-70+bob,9,Math.PI,Math.PI*2)}c.fill();c.fillRect(-8,-70+bob,16,2.5)}
+ // rifle with stock, grip, magazine, handguard, barrel and front sight
+ c.fillStyle='#171d20';c.fillRect(10,-39+bob,25,4);c.fillRect(33,-38+bob,13,2);c.fillRect(15,-35+bob,5,7);c.fillRect(11,-41+bob,5,2);c.fillRect(20,-33+bob,3,5);
+ c.fillStyle='#64746b';c.fillRect(22,-41+bob,9,1.5);c.fillRect(40,-40+bob,4,1);
+ c.fillStyle=accent;c.fillRect(26,-42+bob,3,1.5);
  if(foe){c.fillStyle='#ff5365';c.fillRect(-18,-91,36,4);c.fillStyle='#65e69a';c.fillRect(-18,-91,36*Math.max(0,hp/max),4);if(boss){c.save();c.scale(face,1);c.fillStyle='#ffe17a';c.font='900 11px Arial';c.textAlign='center';c.fillText('ARENA BOSS',0,-105);c.restore()}}
  else if(remote){c.save();c.scale(face,1);c.fillStyle='#b9fff7';c.font='900 10px Arial';c.textAlign='center';c.fillText(String(remoteName||'ONLINE').slice(0,16),0,-98);c.fillStyle='#101923';c.fillRect(-18,-91,36,4);c.fillStyle='#43e7c6';c.fillRect(-18,-91,36*Math.max(0,Math.min(1,(Number(hp)||0)/(Number(max)||100))),4);c.restore()}
  c.restore();
