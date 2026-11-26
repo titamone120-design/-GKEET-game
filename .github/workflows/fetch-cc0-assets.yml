@@ -1,4 +1,4 @@
-name: Fetch and add CC0 3D fighter assets
+name: Fetch CC0 3D fighter assets
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
         with:
           ref: assets-fetch
 
-      - name: Download CC0 humanoid GLB pack
+      - name: Download CC0 humanoid model and animation pack
         run: |
           set -euo pipefail
           curl -L --fail --retry 3 \
@@ -27,82 +27,14 @@ jobs:
           unzip -q /tmp/gkeet-cc0-pack.zip -d /tmp/gkeet-cc0-assets
           unzip -t /tmp/gkeet-cc0-pack.zip
 
-      - name: Download Quaternius Universal Animation Library 2 (CC0)
+      - name: Download CC0 kick animation
         run: |
           set -euo pipefail
-          curl -sSL --fail -X POST \
-            "https://quaternius.itch.io/universal-animation-library-2/file/17958478?source=game_download&as_props=1" \
-            -o /tmp/ual2-response.json
-          download_url="$(jq -er '.url' /tmp/ual2-response.json)"
-          curl -L --fail --retry 3 "$download_url" -o /tmp/ual2-standard.zip
-          mkdir -p /tmp/ual2-standard
-          unzip -q /tmp/ual2-standard.zip -d /tmp/ual2-standard
-          echo "Quaternius UAL2 GLB files:"
-          find /tmp/ual2-standard -type f -iname '*.glb' -printf '%p %s bytes\n'
-
-      - name: Download Quaternius Universal Animation Library 1 (CC0)
-        run: |
-          set -euo pipefail
-          curl -sSL --fail -X POST \
-            "https://quaternius.itch.io/universal-animation-library/file/17958403?source=game_download&as_props=1" \
-            -o /tmp/ual1-response.json
-          download_url="$(jq -er '.url' /tmp/ual1-response.json)"
-          curl -L --fail --retry 3 "$download_url" -o /tmp/ual1-standard.zip
-          mkdir -p /tmp/ual1-standard
-          unzip -q /tmp/ual1-standard.zip -d /tmp/ual1-standard
-          echo "Quaternius UAL1 GLB files:"
-          find /tmp/ual1-standard -type f -iname '*.glb' -printf '%p %s bytes\n'
-
-      - name: Inspect public CC0 kick animation export metadata
-        run: |
-          set -euo pipefail
-          curl -L --fail "https://kinemiq.app/animations/kick/" -o /tmp/kinemiq-kick.html
-          curl -L --fail "https://kinemiq.app/studio/?how=new&use=k:kick" -o /tmp/kinemiq-studio-kick.html
-          echo "Kick page asset and API references:"
-          grep -Eo 'https?[^" ]+|[^" ]+\\.glb[^" ]*|[^" ]+kick[^" ]*' /tmp/kinemiq-kick.html | head -80 || true
-          echo "Studio export references:"
-          grep -Eo 'https?[^" ]+|[^" ]+\\.glb[^" ]*|[^" ]+export[^" ]*' /tmp/kinemiq-studio-kick.html | head -80 || true
-
-      - name: Upload public kick and Studio page source for inspection
-        uses: actions/upload-artifact@v4
-        with:
-          name: KinemIQ-Kick-Page-Source
-          path: |
-            /tmp/kinemiq-kick.html
-            /tmp/kinemiq-studio-kick.html
-          if-no-files-found: error
-
-      - name: Inspect KinemIQ public animation loader and export scripts
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/kinemiq-js
-          for file in app.js composer.js import-anim.js export-rig.js site.js; do
-            curl -L --fail "https://kinemiq.app/studio/${file}" -o "/tmp/kinemiq-js/${file}"
-          done
-          curl -L --fail "https://kinemiq.app/wp-content/kinemiq-app/features.js?b=1795475886" -o /tmp/kinemiq-js/features.js
-          echo "Relevant kick/library/export API references:"
-          grep -RniE 'kq-ajax|wp-json|animation|library|export|glb|fetch\(' /tmp/kinemiq-js | head -120 || true
-
-      - name: Upload KinemIQ Studio scripts for offline API inspection
-        uses: actions/upload-artifact@v4
-        with:
-          name: KinemIQ-Studio-Scripts
-          path: /tmp/kinemiq-js
-          if-no-files-found: error
-
-      - name: Find free kick clip in KinemIQ public catalog
-        run: |
-          set -euo pipefail
-          curl -L --fail "https://kinemiq.app/studio/data/catalog.json" -o /tmp/kinemiq-catalog.json
-          echo "Exact kick entry:"
-          jq -r '.clips[] | select((.id // "") == "kick") | [.id, (.name_en // .name // ""), .file, ((.licence // .license // "") | tostring)] | @tsv' /tmp/kinemiq-catalog.json || true
-          echo "Kick and fighting stance clips:"
-          jq -r '.clips[] | select(((.id // "") + " " + (.name_en // "") + " " + (.name // "")) | test("kick|fighting stance|block - both arms high"; "i")) | [.id, (.name_en // .name // ""), .file, ((.licence // .license // "") | tostring)] | @tsv' /tmp/kinemiq-catalog.json
-          echo "Catalog size: $(wc -c < /tmp/kinemiq-catalog.json) bytes"
-          for path in /studio/clips/kick.glb /studio/clips/idle_fighting_stance.glb /studio/clips/block_both_arms_high.glb; do
-            code="$(curl -L -sS -o /tmp/kq-probe -w '%{http_code}' "https://kinemiq.app${path}")"
-            echo "${code} $(wc -c < /tmp/kq-probe) bytes ${path}"
-          done
+          curl -L --fail --retry 3 \
+            "https://kinemiq.app/studio/clips/kick.glb" \
+            -o /tmp/gkeet-cc0-assets/Kick.glb
+          file /tmp/gkeet-cc0-assets/Kick.glb
+          test -s /tmp/gkeet-cc0-assets/Kick.glb
 
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
@@ -113,6 +45,7 @@ jobs:
           for clip in Idle_relaxed Idle_arms_folded_waiting Walk_forwards Punch_jab_left_2 Punch_cross_right_2 Punch_hook_right_2 Hit_knockback Hit_to_the_head Jump_take_off Jump_in_the_air Jump_landing Dodge_roll; do
             cp "/tmp/gkeet-cc0-assets/GLB/${clip}.glb" "www/models/${clip}.glb"
           done
+          cp /tmp/gkeet-cc0-assets/Kick.glb www/models/Kick.glb
           cp node_modules/three/examples/js/loaders/GLTFLoader.js www/vendor/GLTFLoader.js
           cat > www/models/CC0-LICENSE.txt <<'LICENSE'
           GKEET uses the KinemIQ Free Animation Pack (35 game animations).
@@ -121,8 +54,12 @@ jobs:
           redistributed in commercial and non-commercial projects without
           permission or attribution.
           Source: https://github.com/Kinemiq/free-game-animations
-          Original motion library: Quaternius Universal Animation Library.
-          https://creativecommons.org/publicdomain/zero/1.0/
+
+          The additional "Kick" animation is from the Universal Animation Library
+          by Quaternius, CC0 1.0 Universal. It was retargeted onto the character
+          and resampled to 30 fps.
+          Source: https://quaternius.com/packs/universalanimation.html
+          License: https://creativecommons.org/publicdomain/zero/1.0/
           LICENSE
           echo "Bundled GLB assets:"
           find www/models -maxdepth 1 -type f -printf '%f %s bytes\n'
@@ -135,7 +72,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Assets already up to date"
           else
-            git commit -m "Add CC0 rigged fighter model and combat animations"
+            git commit -m "Add CC0 kick animation to rigged fighters"
             git push origin assets-fetch
           fi
 
@@ -146,18 +83,4 @@ jobs:
           path: |
             www/models
             www/vendor/GLTFLoader.js
-          if-no-files-found: error
-
-      - name: Upload Quaternius UAL2 archive for rig compatibility review
-        uses: actions/upload-artifact@v4
-        with:
-          name: GKEET-Quaternius-UAL2
-          path: /tmp/ual2-standard
-          if-no-files-found: error
-
-      - name: Upload Quaternius UAL1 archive for kick animation review
-        uses: actions/upload-artifact@v4
-        with:
-          name: GKEET-Quaternius-UAL1
-          path: /tmp/ual1-standard
           if-no-files-found: error
