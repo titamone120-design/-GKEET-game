@@ -90,25 +90,13 @@ jobs:
           path: /tmp/kinemiq-js
           if-no-files-found: error
 
-      - name: Probe public KinemIQ library asset paths
+      - name: Find free kick clip in KinemIQ public catalog
         run: |
           set -euo pipefail
-          for path in \
-            /wp-content/kinemiq-app/library/kick.glb \
-            /wp-content/kinemiq-app/library/kick.bvh \
-            /wp-content/kinemiq-app/library/data/catalog.json \
-            /wp-content/kinemiq-app/data/catalog.json \
-            /studio/data/catalog.json \
-            /studio/library/data/catalog.json \
-            /wp-content/kinemiq-app/library/catalog.json; do
-            code="$(curl -L -sS -o /tmp/kq-probe -w '%{http_code}' "https://kinemiq.app${path}")"
-            size="$(wc -c < /tmp/kq-probe)"
-            echo "${code} ${size} bytes ${path}"
-            if [ "${code}" = "200" ]; then
-              grep -in -B 2 -A 4 'kick' /tmp/kq-probe | head -30 || true
-              if [[ "${path}" == *.glb ]]; then cp /tmp/kq-probe /tmp/kinemiq-kick.glb; fi
-            fi
-          done
+          curl -L --fail "https://kinemiq.app/studio/data/catalog.json" -o /tmp/kinemiq-catalog.json
+          echo "Matching combat clips:"
+          jq -r '.clips[] | select(((.id // "") + " " + (.name_en // "") + " " + (.name // "") + " " + ((.keywords // []) | join(" "))) | test("kick"; "i")) | [.id, (.name_en // .name // ""), .file, (.licence // .license // "")] | @tsv' /tmp/kinemiq-catalog.json
+          echo "Catalog size: $(wc -c < /tmp/kinemiq-catalog.json) bytes"
 
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
