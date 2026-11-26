@@ -90,6 +90,15 @@ jobs:
           path: /tmp/kinemiq-js
           if-no-files-found: error
 
+      - name: Inspect public KinemIQ CC0 library catalog
+        run: |
+          set -euo pipefail
+          curl -L --fail "https://kinemiq.app/wp-content/kinemiq-app/library/data/catalog.json" -o /tmp/kinemiq-catalog.json
+          echo "Catalog size: $(wc -c < /tmp/kinemiq-catalog.json) bytes"
+          grep -in -B 4 -A 8 '"kick"' /tmp/kinemiq-catalog.json | head -100 || true
+          echo "Potential kick files:"
+          grep -Eo '[^"]*kick[^"]*\\.(glb|bvh|fbx)' /tmp/kinemiq-catalog.json | head -30 || true
+
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
           set -euo pipefail
