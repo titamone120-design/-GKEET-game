@@ -37,7 +37,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#stageLabel').textContent(), '01');
 
     const before = Number(await page.locator('#timer').textContent());
-    await page.waitForTimeout(1200);
+    await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 });
     const after = Number(await page.locator('#timer').textContent());
     assert.ok(after < before, 'fight timer should run while playing');
 
