@@ -94,9 +94,15 @@ jobs:
         run: |
           set -euo pipefail
           curl -L --fail "https://kinemiq.app/studio/data/catalog.json" -o /tmp/kinemiq-catalog.json
-          echo "Matching combat clips:"
-          jq -r '.clips[] | select(((.id // "") + " " + (.name_en // "") + " " + (.name // "") + " " + ((.keywords // []) | join(" "))) | test("kick"; "i")) | [.id, (.name_en // .name // ""), .file, ((.licence // .license // "") | tostring)] | @tsv' /tmp/kinemiq-catalog.json
+          echo "Exact kick entry:"
+          jq -r '.clips[] | select((.id // "") == "kick") | [.id, (.name_en // .name // ""), .file, ((.licence // .license // "") | tostring)] | @tsv' /tmp/kinemiq-catalog.json || true
+          echo "Kick and fighting stance clips:"
+          jq -r '.clips[] | select(((.id // "") + " " + (.name_en // "") + " " + (.name // "")) | test("kick|fighting stance|block - both arms high"; "i")) | [.id, (.name_en // .name // ""), .file, ((.licence // .license // "") | tostring)] | @tsv' /tmp/kinemiq-catalog.json
           echo "Catalog size: $(wc -c < /tmp/kinemiq-catalog.json) bytes"
+          for path in /studio/clips/kick.glb /studio/clips/idle_fighting_stance.glb /studio/clips/block_both_arms_high.glb; do
+            code="$(curl -L -sS -o /tmp/kq-probe -w '%{http_code}' "https://kinemiq.app${path}")"
+            echo "${code} $(wc -c < /tmp/kq-probe) bytes ${path}"
+          done
 
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
