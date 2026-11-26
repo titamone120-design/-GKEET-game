@@ -3,7 +3,7 @@
   const URL = "https://lltldlpfcxrmceifkwsm.supabase.co";
   const KEY = "sb_publishable_H6AJNrLeF5ok4wVcNSwIRQ_SMdI-s7d";
   const $ = (id) => document.getElementById(id);
-  let client = null, session = null, room = null, channel = null;
+  let client = null, session = null, room = null, channel = null, remotePlayers = new Map(), lastStateAt = 0;
   function authMessage(message) { $("onlineAuthStatus").textContent = message; }
   function roomMessage(message) { $("roomStatus").textContent = message; }
   function refreshAuth() {
@@ -34,11 +34,12 @@
     renderPlayers(result.data);
   }
   async function enterRoom(roomId, knownCode) {
-    const result = await client.from("gkeet_rooms").select("id,code,status,max_players").eq("id", roomId).single();
+    const result = await client.from("gkeet_rooms").select("id,code,status,max_players,owner_id,map_id").eq("id", roomId).single();
     if (result.error) { roomMessage(result.error.message); return; }
     room = result.data;
     $("roomDetails").hidden = false;
     $("roomCodeDisplay").textContent = knownCode || room.code;
+    $("startOnlineMatch").hidden = room.owner_id !== session.user.id;
     roomMessage("Connecting to live room…");
     await loadMembers();
     if (channel) await client.removeChannel(channel);
@@ -50,6 +51,10 @@
       if (peers.length) renderPlayers(peers);
     });
     channel.on("broadcast", { event: "room_refresh" }, loadMembers);
+    channel.on("broadcast", { event: "player_state" }, ({ payload }) => { if (payload?.user_id && payload.user_id !== session.user.id) remotePlayers.set(payload.user_id, payload); });
+    channel.on("broadcast", { event: "player_shot" }, ({ payload }) => { if (payload?.user_id !== session.user.id) window.gkeetReceiveRemoteShot?.(payload); });
+    channel.on("broadcast", { event: "match_start" }, ({ payload }) => { if (payload?.map_id) window.gkeetStartOnlineMatch?.(payload.map_id); roomMessage("MATCH STARTED • Fight!"); });
+    channel.on("broadcast", { event: "match_result" }, ({ payload }) => { roomMessage((payload?.win ? "Player cleared the zone" : "Player was defeated") + (Number.isFinite(payload?.score) ? " • Score " + payload.score : "")); });
     channel.subscribe(async (status) => {
       if (status === "SUBSCRIBED") {
         await channel.track({ user_id: session.user.id, player_name: $("lobbyPlayerName").value.trim() || session.user.user_metadata?.display_name || "Player" });
@@ -80,8 +85,20 @@
     await enterRoom(result.data, code);
     if (channel) await channel.send({ type: "broadcast", event: "room_refresh", payload: { at: Date.now() } });
   }
+  async function startOnlineMatch() {
+    if (!room || !session || room.owner_id !== session.user.id) return;
+    const members = await client.from("gkeet_room_members").select("user_id").eq("room_id", room.id);
+    if (members.error) { roomMessage(members.error.message); return; }
+    if ((members.data || []).length < 2) { roomMessage("Invite at least one friend before starting."); return; }
+    const updated = await client.from("gkeet_rooms").update({ status: "playing", map_id: "zone_01" }).eq("id", room.id);
+    if (updated.error) { roomMessage("Could not start match: " + updated.error.message); return; }
+    await channel.send({ type: "broadcast", event: "match_start", payload: { map_id: 1 } });
+    window.gkeetStartOnlineMatch?.(1);
+    roomMessage("MATCH STARTED • Fight!");
+  }
   async function leaveRoom() {
     if (channel) { await client.removeChannel(channel); channel = null; }
+    remotePlayers.clear();
     if (room && session) await client.from("gkeet_room_members").delete().eq("room_id", room.id).eq("user_id", session.user.id);
     room = null;
     $("roomDetails").hidden = true;
@@ -118,6 +135,7 @@
       (result.data.session ? "Account created. You are signed in." : "Account created. Check your email to confirm, then sign in."));
   };
   $("createRoom").onclick = createRoom;
+  $("startOnlineMatch").onclick = startOnlineMatch;
   $("quickRoom").onclick = createRoom;
   $("joinRoom").onclick = joinRoom;
   $("leaveRoom").onclick = leaveRoom;
@@ -127,6 +145,14 @@
     catch (_) { roomMessage("Room code: " + room.code); }
   };
   $("onlineSignOut").onclick = async () => { await leaveRoom(); await client.auth.signOut(); authMessage("Signed out."); };
+  window.gkeetOnline = {
+    get active() { return !!(room && channel); },
+    getRemotePlayers() { return Array.from(remotePlayers.values()); },
+    resetRemotePlayers() { remotePlayers.clear(); },
+    async sendState(state) { if (!channel || !room || !session) return; const now = performance.now(); if (now - lastStateAt < 70) return; lastStateAt = now; await channel.send({ type: "broadcast", event: "player_state", payload: { ...state, user_id: session.user.id, player_name: $("lobbyPlayerName").value.trim() || "Player", sent_at: Date.now() } }); },
+    async sendShot(shot) { if (!channel || !room || !session) return; await channel.send({ type: "broadcast", event: "player_shot", payload: { ...shot, user_id: session.user.id } }); },
+    async sendMatchResult(result) { if (!channel || !room || !session) return; await channel.send({ type: "broadcast", event: "match_result", payload: { ...result, user_id: session.user.id } }); }
+  };
   $("onlineBack").onclick = () => {
     ["home", "maps", "onlinePanel", "game"].forEach((id) => $(id).classList.remove("on"));
     $("home").classList.add("on");
