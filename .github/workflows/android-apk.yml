@@ -39,7 +39,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Validate game JavaScript syntax
-        run: node -e "const fs=require('fs');const h=fs.readFileSync('www/index.html','utf8');const scripts=[...h.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(m=>m[1]).filter(s=>s.trim());scripts.forEach(s=>new Function(s));console.log('Game JavaScript syntax OK')"
+        run: node -e "const fs=require('fs');for(const f of ['www/index.html','www/shooter.html']){const h=fs.readFileSync(f,'utf8');for(const m of h.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)){if(m[1].trim())new Function(m[1])}console.log(f+' syntax OK')}"
       - name: Add Android platform
         run: npx cap add android
       - name: Set fighting game to landscape orientation
