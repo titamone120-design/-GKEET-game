@@ -52,7 +52,7 @@
 </style></head><body>
 <section id="home" class="screen on"><div class="card">
 <div class="homeHero"><span class="heroTag">MOBILE ACTION GAME</span><h1 class="logo">GKEET</h1><div class="tag">BATTLE STRIKE</div><p class="heroText">EXPLORE A HUGE OPEN BATTLEFIELD • FIND ENEMIES • CONQUER 20 ZONES</p><div class="heroSoldier" aria-hidden="true">🪖</div></div>
-<div class="homeBody"><div><p class="sectionLabel">CHOOSE YOUR MODE</p><div class="actions"><button class="primary wide" id="quick">▶ QUICK BATTLE</button><button id="choose">🗺 MAP SELECT</button><button id="training">🎯 TRAINING</button><button class="wide" id="online">🌐 ONLINE ROOMS</button></div></div>
+<div class="homeBody"><div><p class="sectionLabel">CHOOSE YOUR MODE</p><div class="actions"><button class="primary wide" id="quick">▶ QUICK BATTLE</button><button id="choose">🗺 MAP SELECT</button><button id="training">🎯 TRAINING</button><button id="armoryOpen" class="wide">🧥 CHARACTER & ARMORY</button><button class="wide" id="online">🌐 ONLINE ROOMS</button></div></div>
 <div class="featurePanel"><p class="sectionLabel">BATTLE FEATURES</p><div class="featureLine">✓ Huge open battlefields to explore</div><div class="featureLine">✓ 4 weapon classes</div><div class="featureLine">✓ Enemy squads spread across the map</div><div class="featureLine">✓ Mobile touch controls</div><div class="featureLine">✓ Unlock maps as you win</div><div class="featureLine">✓ Online room lobby • up to 6 players</div></div>
 <div class="mapStrip"><div class="mapTile"><b>🌆</b>NEON CITY</div><div class="mapTile"><b>🏜️</b>DESERT</div><div class="mapTile"><b>❄️</b>FROST BASE</div><div class="mapTile"><b>🌴</b>JUNGLE</div><div class="mapTile"><b>🌋</b>LAVA ZONE</div></div></div>
 <p class="note">Online rooms are connected to the GKEET server. Live player movement and combat synchronization are still in development.</p>
@@ -83,7 +83,7 @@
 </div>
 <button id="onlineSignOut" style="width:100%;margin-top:10px">SIGN OUT</button>
 </div></div></section>
-\n<section id="maps" class="screen"><div class="card"><button id="back">← BACK</button><h2>CHOOSE BATTLE ZONE</h2><p class="note">Explore the wide battlefield. Win battles to unlock more maps.</p><div id="mapGrid" class="grid"></div></div></section>
+\n<section id="armory" class="screen"><div class="card" style="padding:20px"><button id="armoryBack">← BACK</button><h2>🧥 CHARACTER & ARMORY</h2><p class="note" style="padding:0">Customize your fighter.</p><p class="sectionLabel">OUTFITS</p><div class="actions"><button data-outfit="field">FIELD UNIFORM</button><button data-outfit="street">STREET CLOTHES</button><button data-outfit="desert">DESERT KIT</button></div><p class="sectionLabel">HAIRSTYLE</p><div class="actions"><button data-hair="short">SHORT HAIR</button><button data-hair="curly">CURLY HAIR</button><button data-hair="fade">FADE CUT</button></div><p class="sectionLabel">HEADWEAR</p><div class="actions"><button data-head="none">NO HAT</button><button data-head="kufi">🧢 KUFI</button><button data-head="cap">COMBAT CAP</button></div><p class="sectionLabel">WEAPON LOADOUT</p><div class="actions"><button data-gun="0">ASSAULT RIFLE</button><button data-gun="1">SMG</button><button data-gun="2">SNIPER</button><button data-gun="3">SHOTGUN</button></div><div class="featurePanel"><p class="sectionLabel">GRENADES & EQUIPMENT</p><div class="featureLine">💣 Grenade equipment and throwing controls are not implemented yet.</div></div></div></section><section id="maps" class="screen"><div class="card"><button id="back">← BACK</button><h2>CHOOSE BATTLE ZONE</h2><p class="note">Explore the wide battlefield. Win battles to unlock more maps.</p><div id="mapGrid" class="grid"></div></div></section>
 <main id="game" class="game"><canvas id="view"></canvas><div class="hud"><div class="stat">GKEET <div class="health"><i id="hp"></i></div></div><div class="stat" id="mapName">ZONE 01</div><div class="stat"><span id="ammo">30 / 120</span><br><span id="score">KILLS 0</span></div></div><button class="top" id="pause">Ⅱ</button><div class="controls"><div class="cluster"><div class="stick-wrap" id="moveStick" aria-label="Movement joystick"><div class="stick-knob" id="moveKnob"></div><span class="stick-label">MOVE</span></div></div><div class="cluster"><div class="action-stack"><button class="mini-action" id="jumpBtn" type="button" aria-label="Jump">⬆</button><button class="mini-action reload" data-k="reload" type="button">RELOAD</button></div><div class="stick-wrap right-stick" id="aimStick" aria-label="Aim and fire joystick"><div class="stick-knob" id="aimKnob"></div><span class="stick-label">AIM / FIRE</span></div><button class="mini-action" id="weaponBtn" type="button">GUN</button></div></div><div class="overlay" id="overlay"><div class="card"><h2 id="result">PAUSED</h2><p id="message">Take a breath.</p><div class="actions"><button class="primary" id="resume">RESUME</button><button id="again">RETRY</button><button id="homeBtn" class="wide">MAIN MENU</button></div></div></div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script><script>
 (()=>{'use strict';
@@ -91,6 +91,7 @@ const $=id=>document.getElementById(id),cv=$('view'),c=cv.getContext('2d');
 const maps=[
 ['NEON CITY','#091d36','#0d5271','#19d6d0'],['DUSTY OUTPOST','#4a2c20','#a45b2d','#ffb35c'],['FROST BASE','#102c48','#4e8eb0','#b7efff'],['JUNGLE RUINS','#102c23','#28744b','#a8e66a'],['LAVA FACTORY','#32151c','#8e3025','#ff9b42'],['MOON STATION','#171d39','#4a5281','#a6baff'],['HARBOR RAID','#092c3d','#176b83','#4ce4f1'],['DESERT FORT','#4a351d','#a17b3a','#ffe08a'],['SKY BRIDGE','#202047','#554e91','#d3a4ff'],['DARK SUBWAY','#141a26','#3c4c61','#69d8ff'],['BIO DOME','#123b37','#267f70','#86ffce'],['WAR TOWN','#38202a','#8b3c4b','#ff9b9b'],['CANYON EDGE','#422a24','#a45d3a','#ffd07b'],['STORM PORT','#13283d','#32617b','#8ce7ff'],['CYBER MALL','#24143f','#693e8e','#f69dff'],['AIRFIELD X','#24313c','#657b87','#d8eeff'],['SWAMP LAND','#172d24','#426344','#c1d66b'],['ICE CAVERN','#102a40','#3b7797','#a8f5ff'],['ROOFTOP WAR','#1b1a35','#594a78','#ffce83'],['GKEET ARENA','#101a2d','#086a85','#38efff']];
 let W=0,H=0,ground=0,cam=0,worldWidth=12000,level=1,wave=1,wavesPerZone=3,unlocked=+(localStorage.gkeetShooterUnlocked||1),kills=0,paused=false,ended=false,keys={},bullets=[],enemies=[],platforms=[],particles=[],pickups=[],last=0,raf=0,ammo=30,reserve=120,reloading=false,reloadAt=0,weapon=0,score=0,training=false,combo=0,comboUntil=0,headshots=0;
+const style=JSON.parse(localStorage.gkeetStyle||'{"outfit":"field","hair":"short","head":"kufi"}');
 const weapons=[{name:'ASSAULT',damage:24,rate:170,speed:13,mag:30},{name:'SMG',damage:13,rate:85,speed:12,mag:45},{name:'SNIPER',damage:65,rate:650,speed:19,mag:8},{name:'SHOTGUN',damage:12,rate:500,speed:11,mag:6,pellets:6}];let lastShot=0;
 function resize(){let d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;c.setTransform(d,0,0,d,0,0);ground=H*.77}addEventListener('resize',resize);resize();
 function screen(id){['home','maps','onlinePanel','game'].forEach(k=>$(k).classList.remove('on'));$(id).classList.add('on')}
@@ -154,7 +155,7 @@ for(let b of bullets){let sx=b.x-cam,sy=b.y,angle=Math.atan2(b.vy,b.vx),length=b
 function soldier(x,y,face,foe,hp,max,boss=false,remote=false,remoteName='ONLINE'){
  c.save();c.translate(x,y);c.scale(face,1);if(boss)c.scale(1.32,1.32);
  const t=performance.now()/100,phase=t+(foe?1.7:0),bob=Math.sin(phase*1.8)*1.2,step=Math.sin(phase*2.8)*4.2;
- const suit=foe?'#78283a':remote?'#087c85':'#294e69',dark=foe?'#351b29':'#102638',trim=foe?'#ff6678':remote?'#54f5e5':pal[3],skin=foe?'#d99578':'#c98c68';
+ const outfit=style.outfit==='street'?['#3d6c86','#203d52','#e8c66b']:style.outfit==='desert'?['#9a7848','#59452e','#e9c77d']:['#315b48','#1b382e','#d6bd78'];const suit=foe?'#78283a':remote?'#087c85':outfit[0],dark=foe?'#351b29':remote?'#102638':outfit[1],trim=foe?'#ff6678':remote?'#54f5e5':outfit[2],skin=foe?'#d99578':'#b97855';
  // ground shadow
  c.fillStyle='#0009';c.beginPath();c.ellipse(0,2,24,6,0,0,Math.PI*2);c.fill();
  // boots and animated legs
@@ -182,10 +183,13 @@ function soldier(x,y,face,foe,hp,max,boss=false,remote=false,remoteName='ONLINE'
  // neck, face and detailed combat helmet
  c.fillStyle=skin;c.fillRect(-4,-57+bob,8,7);
  c.fillStyle=skin;c.beginPath();c.ellipse(0,-65+bob,8.5,10,0,0,Math.PI*2);c.fill();
- c.fillStyle=foe?'#321724':'#102b43';c.beginPath();c.ellipse(0,-69+bob,12,8,0,Math.PI,Math.PI*2);c.fill();c.fillRect(-12,-69+bob,24,4);
- c.fillStyle=trim;c.fillRect(-8,-66+bob,16,2);c.fillStyle='#0b1722';c.fillRect(4,-64+bob,4,2);
- c.fillStyle=foe?'#b34c5c':'#527b96';c.fillRect(-13,-66+bob,4,3);
- c.fillStyle=dark;c.fillRect(-3,-77+bob,6,2);
+ c.fillStyle='#302019';c.beginPath();c.arc(-3,-67+bob,1.1,0,Math.PI*2);c.arc(3,-67+bob,1.1,0,Math.PI*2);c.fill();
+ c.strokeStyle='#633d2d';c.lineWidth=1;c.beginPath();c.moveTo(-3,-61+bob);c.quadraticCurveTo(0,-59+bob,3,-61+bob);c.stroke();
+ if(foe){c.fillStyle='#321724';c.beginPath();c.arc(0,-69+bob,10,Math.PI,Math.PI*2);c.fill();c.fillRect(-10,-69+bob,20,3)}
+ else if(style.head==='kufi'){c.fillStyle='#eee9d8';c.beginPath();c.ellipse(0,-73+bob,10,5,0,Math.PI,Math.PI*2);c.fill();c.fillRect(-10,-73+bob,20,4);c.strokeStyle='#b8a982';c.lineWidth=1;c.beginPath();c.moveTo(-7,-73+bob);c.lineTo(7,-73+bob);c.stroke()}
+ else if(style.head==='cap'){c.fillStyle='#243b30';c.beginPath();c.arc(0,-70+bob,10,Math.PI,Math.PI*2);c.fill();c.fillRect(-10,-70+bob,20,3);c.fillRect(2,-68+bob,12,2)}
+ else {c.fillStyle='#302019';c.beginPath();if(style.hair==='curly'){c.arc(-5,-70+bob,5,Math.PI,Math.PI*2);c.arc(0,-72+bob,5,Math.PI,Math.PI*2);c.arc(5,-70+bob,5,Math.PI,Math.PI*2)}else{c.arc(0,-70+bob,9,Math.PI,Math.PI*2)}c.fill();c.fillRect(-8,-70+bob,16,3)}
+ c.fillStyle=skin;c.beginPath();c.arc(-8,-64+bob,2.2,0,Math.PI*2);c.arc(8,-64+bob,2.2,0,Math.PI*2);c.fill();
  // radio backpack and straps
  c.fillStyle=foe?'#512331':'#173247';c.fillRect(-19,-49+bob,7,19);c.fillStyle=trim;c.fillRect(-18,-46+bob,5,3);
  c.strokeStyle='#9bb2bf';c.lineWidth=1.3;c.beginPath();c.moveTo(-8,-49+bob);c.lineTo(-4,-24+bob);c.moveTo(8,-49+bob);c.lineTo(4,-24+bob);c.stroke();
@@ -199,6 +203,11 @@ function soldier(x,y,face,foe,hp,max,boss=false,remote=false,remoteName='ONLINE'
 soldier(player.x,player.y,player.face,false);if(window.gkeetOnline?.active){for(const remote of window.gkeetOnline.getRemotePlayers())soldier(remote.x,remote.y,remote.face||1,false,remote.hp,100,false,true,remote.player_name)}for(let e of enemies)if(!e.dead)soldier(e.x,e.y,e.face,true,e.hp,e.max,!!e.boss);for(let p of particles){c.globalAlpha=p.life/24;c.fillStyle=p.col;c.fillRect(p.x,p.y,4,4)}c.globalAlpha=1;c.restore()}
 function loop(now){if(!paused&&!ended){now=Number.isFinite(now)?now:performance.now();let dt=Math.max(0,Math.min(40,now-last));last=now;update(dt);draw();raf=requestAnimationFrame(loop)}}
 function pause(){if(ended)return;paused=!paused;if(paused){cancelAnimationFrame(raf);$('result').textContent='PAUSED';$('message').textContent='Battle paused.';$('resume').textContent='RESUME';$('resume').onclick=pause;$('overlay').classList.add('on')}else{$('overlay').classList.remove('on');last=performance.now();raf=requestAnimationFrame(loop)}}
+$('armoryOpen').onclick=()=>screen('armory');$('armoryBack').onclick=()=>screen('home');
+document.querySelectorAll('[data-outfit]').forEach(b=>b.onclick=()=>{style.outfit=b.dataset.outfit;localStorage.gkeetStyle=JSON.stringify(style)});
+document.querySelectorAll('[data-hair]').forEach(b=>b.onclick=()=>{style.hair=b.dataset.hair;localStorage.gkeetStyle=JSON.stringify(style)});
+document.querySelectorAll('[data-head]').forEach(b=>b.onclick=()=>{style.head=b.dataset.head;localStorage.gkeetStyle=JSON.stringify(style)});
+document.querySelectorAll('[data-gun]').forEach(b=>b.onclick=()=>{weapon=Number(b.dataset.gun);ammo=weapons[weapon].mag;reserve=120});
 $('weaponBtn').onclick=()=>{weapon=(weapon+1)%weapons.length;ammo=Math.min(ammo,weapons[weapon].mag);$('ammo').textContent=ammo+' / '+reserve+' • '+weapons[weapon].name;$('weaponBtn').textContent=weapons[weapon].name.slice(0,3)};
 $('quick').onclick=()=>start(unlocked,false);$('choose').onclick=()=>{buildMaps();screen('maps')};$('training').onclick=()=>start(1,true);$('back').onclick=()=>screen('home');$('pause').onclick=pause;$('again').onclick=()=>start(level,false);$('homeBtn').onclick=()=>{cancelAnimationFrame(raf);screen('home')};
 document.querySelectorAll('[data-k]').forEach(b=>{let k=b.dataset.k;let down=e=>{e.preventDefault();keys[k]=true};let up=e=>{e.preventDefault();keys[k]=false};b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)});
