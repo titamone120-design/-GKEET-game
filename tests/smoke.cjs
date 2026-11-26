@@ -32,7 +32,7 @@ const server = http.createServer((req, res) => {
   page.on('console', message => { if (message.type() === 'warning' || message.type() === 'error') consoleWarnings.push(message.text()); });
 
   try {
-    await page.goto(`http://127.0.0.1:${address.port}/`, { waitUntil: 'load' });
+    await page.goto(`http://127.0.0.1:${address.port}/?test=1`, { waitUntil: 'load' });
     await page.waitForSelector('#playBtn');
     await page.locator('#playBtn').click();
     await page.waitForFunction(() => document.querySelector('#game').classList.contains('active'));
@@ -49,8 +49,9 @@ const server = http.createServer((req, res) => {
     await page.waitForTimeout(180);
     await kickButton.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true });
     await page.waitForFunction(() => (window.__gkeetKickCountByFighter?.[0] || 0) > 0, null, { timeout: 4000 });
-    // Wait for the actual attack cooldown rather than relying on a fixed delay.
-    await page.waitForFunction(() => window.__gkeetDebug().playerCool <= 0, null, { timeout: 10000 });
+    // Advance deterministic game frames so this assertion is independent of runner timing.
+    await page.evaluate(() => window.__gkeetTestStep(40));
+    assert.ok((await page.evaluate(() => window.__gkeetDebug().playerCool)) <= 0, 'attack cooldown should expire');
     await page.keyboard.down('j');
     await page.waitForTimeout(60);
     const punchState = await page.evaluate(() => window.__gkeetDebug());
@@ -75,7 +76,7 @@ const server = http.createServer((req, res) => {
     assert.ok(dashState.playerDashCount > dashCountBefore, 'double-tap touch movement should activate dash: ' + JSON.stringify(dashState));
 
     const before = Number(await page.locator('#timer').textContent());
-    try { await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 }); } catch (error) { console.error('Classic timer state:', await page.evaluate(() => ({ timer: document.querySelector('#timer')?.textContent, debug: window.__gkeetDebug?.() })), 'browser errors:', pageErrors, 'console warnings:', consoleWarnings); throw error; }
+    await page.evaluate(() => window.__gkeetTestStep(120));
     const after = Number(await page.locator('#timer').textContent());
     assert.ok(after < before, 'fight timer should run while playing');
 
