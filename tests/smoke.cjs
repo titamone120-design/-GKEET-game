@@ -44,7 +44,10 @@ const server = http.createServer((req, res) => {
       throw error;
     }
     await page.screenshot({ path: '/tmp/gkeet-gameplay.png' });
-    await page.locator('[data-key="kick"]').click();
+    const kickButton = page.locator('[data-key="kick"]');
+    await kickButton.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', isPrimary: true });
+    await page.waitForTimeout(180);
+    await kickButton.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true });
     await page.waitForFunction(() => (window.__gkeetKickCount || 0) > 0, null, { timeout: 4000 });
 
     const before = Number(await page.locator('#timer').textContent());
