@@ -72,6 +72,17 @@ jobs:
             /tmp/kinemiq-studio-kick.html
           if-no-files-found: error
 
+      - name: Inspect KinemIQ public animation loader and export scripts
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/kinemiq-js
+          for file in app.js composer.js import-anim.js export-rig.js site.js; do
+            curl -L --fail "https://kinemiq.app/studio/${file}" -o "/tmp/kinemiq-js/${file}"
+          done
+          curl -L --fail "https://kinemiq.app/wp-content/kinemiq-app/features.js?b=1795475886" -o /tmp/kinemiq-js/features.js
+          echo "Relevant kick/library/export API references:"
+          grep -RniE 'kq-ajax|wp-json|animation|library|export|glb|fetch\(' /tmp/kinemiq-js | head -120 || true
+
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
           set -euo pipefail
