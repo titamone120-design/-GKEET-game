@@ -63,6 +63,15 @@ jobs:
           echo "Studio export references:"
           grep -Eo 'https?[^" ]+|[^" ]+\\.glb[^" ]*|[^" ]+export[^" ]*' /tmp/kinemiq-studio-kick.html | head -80 || true
 
+      - name: Upload public kick and Studio page source for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: KinemIQ-Kick-Page-Source
+          path: |
+            /tmp/kinemiq-kick.html
+            /tmp/kinemiq-studio-kick.html
+          if-no-files-found: error
+
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
           set -euo pipefail
