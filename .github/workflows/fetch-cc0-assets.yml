@@ -27,6 +27,19 @@ jobs:
           unzip -q /tmp/gkeet-cc0-pack.zip -d /tmp/gkeet-cc0-assets
           unzip -t /tmp/gkeet-cc0-pack.zip
 
+      - name: Download Quaternius Universal Animation Library 2 (CC0)
+        run: |
+          set -euo pipefail
+          curl -sSL --fail -X POST \
+            "https://quaternius.itch.io/universal-animation-library-2/file/17958478?source=game_download&as_props=1" \
+            -o /tmp/ual2-response.json
+          download_url="$(jq -er '.url' /tmp/ual2-response.json)"
+          curl -L --fail --retry 3 "$download_url" -o /tmp/ual2-standard.zip
+          mkdir -p /tmp/ual2-standard
+          unzip -q /tmp/ual2-standard.zip -d /tmp/ual2-standard
+          echo "Quaternius UAL2 GLB files:"
+          find /tmp/ual2-standard -type f -iname '*.glb' -printf '%p %s bytes\n'
+
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
           set -euo pipefail
