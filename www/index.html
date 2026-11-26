@@ -151,6 +151,14 @@ function init3D(){
   actors3d[0].position.x=-4;actors3d[1].position.x=4;actors3d[0].rotation.y=Math.PI/2;actors3d[1].rotation.y=-Math.PI/2;
   const disposeActor=(actor)=>{if(!actor)return;actor.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});};
   const enemySuitColors=[0xb42d49,0x237f9c,0xc35c23,0x7945a5,0x668b37,0x64778c,0xc33c40,0x9a792a,0x2c7964,0x80577f,0x4269a8,0xa46a36,0x66517c,0x2e8b92,0x9d4b42,0x4d6c98,0x8b6b31,0x8d3c5c,0x547b3c,0x655040];
+  function addRigHeadgear(rig,index,variant=0){
+   const head=rig.getObjectByName('Head');if(!head)return;
+   const hairMat=new THREE.MeshStandardMaterial({color:index===0?0x2d1b14:0x15121b,roughness:.86});
+   const cap=new THREE.Mesh(new THREE.SphereGeometry(.16,16,12),hairMat);cap.scale.set(1.12,.52,1.08);cap.position.set(0,.19,0);head.add(cap);
+   const bandMat=new THREE.MeshStandardMaterial({color:index===0?0x2b9fce:0xe3a33d,metalness:.25,roughness:.55});
+   const band=new THREE.Mesh(new THREE.TorusGeometry(.145,.018,6,20),bandMat);band.rotation.x=Math.PI/2;band.scale.set(1.08,.92,1);band.position.set(0,.135,0);head.add(band);
+   if(index===1&&variant%5===3){for(let side of [-1,1]){const horn=new THREE.Mesh(new THREE.ConeGeometry(.045,.13,7),bandMat);horn.position.set(side*.11,.28,0);horn.rotation.z=-side*.35;head.add(horn);}}
+  }
   function applyRigOutfit(rig,index,variant=0){
    const suit=index===0?0x1477bd:enemySuitColors[variant%enemySuitColors.length],accent=index===0?0x39d8ee:0xffc45c,skin=index===0?0xe0aa83:0xb77c62;
    const sleeve=new THREE.Color(suit).multiplyScalar(.58).getHex(),pants=0x202b3c,boots=0x101722;
@@ -162,7 +170,7 @@ function init3D(){
    const loader=new THREE.GLTFLoader();
    loader.load('models/KinemIQ_Mannequin.glb',(gltf)=>{
     const rig=gltf.scene;rig.scale.setScalar(2.05);const bounds=new THREE.Box3().setFromObject(rig);rig.position.y-=bounds.min.y;
-    rig.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];o.material=Array.isArray(o.material)?mats.map(m=>{const copy=m.clone();copy.metalness=.08;copy.roughness=.68;return copy;}):mats[0].clone();}}});applyRigOutfit(rig,index,index===0?0:stage-1);
+    rig.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];o.material=Array.isArray(o.material)?mats.map(m=>{const copy=m.clone();copy.metalness=.08;copy.roughness=.68;return copy;}):mats[0].clone();}}});applyRigOutfit(rig,index,index===0?0:stage-1);addRigHeadgear(rig,index,index===0?0:stage-1);
     const actor=new THREE.Group();actor.add(rig);actor.userData.isRigged=true;actor.userData.currentAnim='';
     actor.position.x=index===0?-4:4;actor.rotation.y=index===0?Math.PI/2:-Math.PI/2;
     const previous=actors3d[index];scene3d.remove(previous);disposeActor(previous);scene3d.add(actor);actors3d[index]=actor;window.__gkeetRigCount=(window.__gkeetRigCount||0)+1;
