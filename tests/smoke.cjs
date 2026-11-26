@@ -44,9 +44,13 @@ const server = http.createServer((req, res) => {
       throw error;
     }
     const kickButton = page.locator('[data-key="kick"]');
-    await kickButton.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', isPrimary: true });
+    const kickBox = await kickButton.boundingBox();
+    assert.ok(kickBox, 'kick button should be visible');
+    await page.mouse.move(kickBox.x + kickBox.width / 2, kickBox.y + kickBox.height / 2);
+    await page.mouse.down();
+    await page.waitForFunction(() => window.__gkeetDebug().playerAttack > 0 && window.__gkeetDebug().playerKind === 'kick', null, { timeout: 4000 });
     await page.waitForTimeout(180);
-    await kickButton.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true });
+    await page.mouse.up();
     await page.waitForFunction(() => (window.__gkeetKickCountByFighter?.[0] || 0) > 0, null, { timeout: 4000 });
 
     const before = Number(await page.locator('#timer').textContent());
