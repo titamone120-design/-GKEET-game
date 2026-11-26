@@ -49,6 +49,8 @@ const server = http.createServer((req, res) => {
     await page.waitForTimeout(180);
     await kickButton.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true });
     await page.waitForFunction(() => (window.__gkeetKickCountByFighter?.[0] || 0) > 0, null, { timeout: 4000 });
+    // Let the kick's recovery/cooldown finish before checking the next attack input.
+    await page.waitForTimeout(700);
     await page.keyboard.down('j');
     await page.waitForTimeout(60);
     const punchState = await page.evaluate(() => window.__gkeetDebug());
