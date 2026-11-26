@@ -1,15 +1,22 @@
-name: Fetch CC0 3D Fighter Assets
+name: Fetch and add CC0 3D fighter assets
 
 on:
+  push:
+    branches: [assets-fetch]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   fetch-assets:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout asset branch
+        uses: actions/checkout@v4
+        with:
+          ref: assets-fetch
+
       - name: Download CC0 humanoid GLB pack
         run: |
           set -euo pipefail
@@ -18,14 +25,48 @@ jobs:
             -o /tmp/gkeet-cc0-pack.zip
           mkdir -p /tmp/gkeet-cc0-assets
           unzip -q /tmp/gkeet-cc0-pack.zip -d /tmp/gkeet-cc0-assets
-          echo "Downloaded asset files:"
-          find /tmp/gkeet-cc0-assets -maxdepth 4 -type f -printf '%p %s bytes\n'
-          echo "Archive integrity:"
           unzip -t /tmp/gkeet-cc0-pack.zip
+
+      - name: Install Three.js and add rigged model, combat clips and loader
+        run: |
+          set -euo pipefail
+          npm install
+          mkdir -p www/models www/vendor
+          cp /tmp/gkeet-cc0-assets/KinemIQ_Mannequin.glb www/models/
+          for clip in Idle_relaxed Walk_forwards Punch_jab_left_2 Punch_cross_right_2 Punch_hook_right_2 Hit_knockback Hit_to_the_head Jump_take_off Jump_in_the_air Jump_landing Dodge_roll; do
+            cp "/tmp/gkeet-cc0-assets/GLB/${clip}.glb" "www/models/${clip}.glb"
+          done
+          cp node_modules/three/examples/js/loaders/GLTFLoader.js www/vendor/GLTFLoader.js
+          cat > www/models/CC0-LICENSE.txt <<'LICENSE'
+          GKEET uses the KinemIQ Free Animation Pack (35 game animations).
+          License: CC0 1.0 Universal (public domain dedication).
+          The character mesh and animation motion may be used, modified and
+          redistributed in commercial and non-commercial projects without
+          permission or attribution.
+          Source: https://github.com/Kinemiq/free-game-animations
+          Original motion library: Quaternius Universal Animation Library.
+          https://creativecommons.org/publicdomain/zero/1.0/
+          LICENSE
+          echo "Bundled GLB assets:"
+          find www/models -maxdepth 1 -type f -printf '%f %s bytes\n'
+
+      - name: Commit assets to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add www/models www/vendor/GLTFLoader.js
+          if git diff --cached --quiet; then
+            echo "Assets already up to date"
+          else
+            git commit -m "Add CC0 rigged fighter model and combat animations"
+            git push origin assets-fetch
+          fi
 
       - name: Upload CC0 model and animation pack
         uses: actions/upload-artifact@v4
         with:
           name: GKEET-CC0-3D-Assets
-          path: /tmp/gkeet-cc0-assets
+          path: |
+            www/models
+            www/vendor/GLTFLoader.js
           if-no-files-found: error
