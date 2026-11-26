@@ -51,7 +51,7 @@ const server = http.createServer((req, res) => {
     await page.waitForFunction(() => (window.__gkeetKickCountByFighter?.[0] || 0) > 0, null, { timeout: 4000 });
 
     const before = Number(await page.locator('#timer').textContent());
-    await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 });
+    try { await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 }); } catch (error) { console.error('Classic timer state:', await page.evaluate(() => ({ timer: document.querySelector('#timer')?.textContent, debug: window.__gkeetDebug?.() })), 'browser errors:', pageErrors, 'console warnings:', consoleWarnings); throw error; }
     const after = Number(await page.locator('#timer').textContent());
     assert.ok(after < before, 'fight timer should run while playing');
 
