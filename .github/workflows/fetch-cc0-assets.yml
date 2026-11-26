@@ -1,6 +1,8 @@
 name: Fetch CC0 3D Fighter Assets
 
 on:
+  push:
+    branches: [assets-fetch]
   workflow_dispatch:
 
 permissions:
