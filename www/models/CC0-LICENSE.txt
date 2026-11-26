@@ -4,5 +4,9 @@ The character mesh and animation motion may be used, modified and
 redistributed in commercial and non-commercial projects without
 permission or attribution.
 Source: https://github.com/Kinemiq/free-game-animations
-Original motion library: Quaternius Universal Animation Library.
-https://creativecommons.org/publicdomain/zero/1.0/
+
+The additional "Kick" animation is from the Universal Animation Library
+by Quaternius, CC0 1.0 Universal. It was retargeted onto the character
+and resampled to 30 fps.
+Source: https://quaternius.com/packs/universalanimation.html
+License: https://creativecommons.org/publicdomain/zero/1.0/

@@ -1,4 +1,4 @@
-name: Fetch and add CC0 3D fighter assets
+name: Fetch CC0 3D fighter assets
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
         with:
           ref: assets-fetch
 
-      - name: Download CC0 humanoid GLB pack
+      - name: Download CC0 humanoid model and animation pack
         run: |
           set -euo pipefail
           curl -L --fail --retry 3 \
@@ -26,6 +26,15 @@ jobs:
           mkdir -p /tmp/gkeet-cc0-assets
           unzip -q /tmp/gkeet-cc0-pack.zip -d /tmp/gkeet-cc0-assets
           unzip -t /tmp/gkeet-cc0-pack.zip
+
+      - name: Download CC0 kick animation
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 \
+            "https://kinemiq.app/wp-content/kinemiq-app/library/clips/kick.glb" \
+            -o /tmp/gkeet-cc0-assets/Kick.glb
+          file /tmp/gkeet-cc0-assets/Kick.glb
+          test -s /tmp/gkeet-cc0-assets/Kick.glb
 
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
@@ -36,6 +45,7 @@ jobs:
           for clip in Idle_relaxed Idle_arms_folded_waiting Walk_forwards Punch_jab_left_2 Punch_cross_right_2 Punch_hook_right_2 Hit_knockback Hit_to_the_head Jump_take_off Jump_in_the_air Jump_landing Dodge_roll; do
             cp "/tmp/gkeet-cc0-assets/GLB/${clip}.glb" "www/models/${clip}.glb"
           done
+          cp /tmp/gkeet-cc0-assets/Kick.glb www/models/Kick.glb
           cp node_modules/three/examples/js/loaders/GLTFLoader.js www/vendor/GLTFLoader.js
           cat > www/models/CC0-LICENSE.txt <<'LICENSE'
           GKEET uses the KinemIQ Free Animation Pack (35 game animations).
@@ -44,8 +54,12 @@ jobs:
           redistributed in commercial and non-commercial projects without
           permission or attribution.
           Source: https://github.com/Kinemiq/free-game-animations
-          Original motion library: Quaternius Universal Animation Library.
-          https://creativecommons.org/publicdomain/zero/1.0/
+
+          The additional "Kick" animation is from the Universal Animation Library
+          by Quaternius, CC0 1.0 Universal. It was retargeted onto the character
+          and resampled to 30 fps.
+          Source: https://quaternius.com/packs/universalanimation.html
+          License: https://creativecommons.org/publicdomain/zero/1.0/
           LICENSE
           echo "Bundled GLB assets:"
           find www/models -maxdepth 1 -type f -printf '%f %s bytes\n'
@@ -58,7 +72,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Assets already up to date"
           else
-            git commit -m "Add CC0 rigged fighter model and combat animations"
+            git commit -m "Add CC0 kick animation to rigged fighters"
             git push origin assets-fetch
           fi
 
