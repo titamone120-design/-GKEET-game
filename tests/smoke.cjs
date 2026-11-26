@@ -80,6 +80,30 @@ const server = http.createServer((req, res) => {
     const weaponBefore = await page.locator('#weaponBtn').textContent();
     await page.locator('#weaponBtn').click();
     assert.notEqual(await page.locator('#weaponBtn').textContent(), weaponBefore, 'weapon switch must change the selected weapon');
+
+    // Verify real-time movement, jump/landing physics, and firing consume ammunition.
+    const initial = await page.evaluate(() => window.__gkeetShooterDebug());
+    assert.ok(Math.abs(initial.y - (initial.ground - 4)) < 1, 'player should start standing on the ground');
+    await page.keyboard.down('ArrowRight');
+    await page.waitForTimeout(260);
+    await page.keyboard.up('ArrowRight');
+    const moved = await page.evaluate(() => window.__gkeetShooterDebug());
+    assert.ok(moved.x > initial.x + 15, 'right input should move the player');
+    await page.keyboard.down('ArrowUp');
+    await page.waitForTimeout(100);
+    await page.keyboard.up('ArrowUp');
+    const airborne = await page.evaluate(() => window.__gkeetShooterDebug());
+    assert.ok(airborne.y < airborne.ground - 20, 'jump input should lift the player');
+    await page.waitForFunction(() => window.__gkeetShooterDebug().onGround, null, { timeout: 2500 });
+    const landed = await page.evaluate(() => window.__gkeetShooterDebug());
+    assert.ok(Math.abs(landed.y - (landed.ground - 4)) < 1, 'player should land back on the ground');
+    const ammoBefore = landed.ammo;
+    await page.keyboard.down('j');
+    await page.waitForTimeout(220);
+    await page.keyboard.up('j');
+    const fired = await page.evaluate(() => window.__gkeetShooterDebug());
+    assert.ok(fired.ammo < ammoBefore, 'fire input should consume ammunition');
+
     await page.locator('#pause').click();
     assert.ok(await page.locator('#overlay').evaluate(el => el.classList.contains('on')), 'shooter pause overlay must open');
     await page.locator('#resume').click();
