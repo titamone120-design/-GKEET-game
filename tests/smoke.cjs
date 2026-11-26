@@ -27,7 +27,9 @@ const server = http.createServer((req, res) => {
   });
   const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
   const pageErrors = [];
+  const consoleWarnings = [];
   page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('console', message => { if (message.type() === 'warning' || message.type() === 'error') consoleWarnings.push(message.text()); });
 
   try {
     await page.goto(`http://127.0.0.1:${address.port}/`, { waitUntil: 'load' });
@@ -35,7 +37,12 @@ const server = http.createServer((req, res) => {
     await page.locator('#playBtn').click();
     await page.waitForFunction(() => document.querySelector('#game').classList.contains('active'));
     assert.equal(await page.locator('#stageLabel').textContent(), '01');
-    await page.waitForFunction(() => window.__gkeetRigCount === 2 && window.__gkeetAnimationCount === 16, null, { timeout: 20000 });
+    try {
+      await page.waitForFunction(() => window.__gkeetRigCount === 2 && window.__gkeetAnimationCount === 16, null, { timeout: 20000 });
+    } catch (error) {
+      console.error('GKEET rig/animation load state:', await page.evaluate(() => window.__gkeetDebug()), 'console warnings:', consoleWarnings);
+      throw error;
+    }
     await page.screenshot({ path: '/tmp/gkeet-gameplay.png' });
 
     const before = Number(await page.locator('#timer').textContent());
