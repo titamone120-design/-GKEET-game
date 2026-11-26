@@ -26,6 +26,14 @@
 .mapTile b{display:block;font-size:20px;margin-bottom:4px}
 .note{padding:0 22px 16px;margin:0;color:#9fc6dc}
 @media(max-width:650px){.homeBody{grid-template-columns:1fr;padding:12px}.heroSoldier{right:1%;opacity:.48}.homeHero{padding:18px}.mapStrip{grid-template-columns:repeat(2,1fr)}.note{padding:0 12px 12px}.actions{grid-template-columns:1fr 1fr}}
+
+#onlinePanel .card{max-width:760px;padding:22px}
+.onlineGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.onlineField{width:100%;padding:13px;border-radius:10px;border:1px solid #397eaa;background:#071426;color:#fff;font:inherit;margin:5px 0}
+.onlineStatus{padding:10px;border:1px solid #397eaa;border-radius:10px;color:#bfeaff;background:#071a2d;margin:10px 0;font-size:13px}
+.onlinePlayers{display:grid;gap:7px;margin:12px 0;text-align:left}
+.onlinePlayer{padding:9px 12px;background:#0b2239;border:1px solid #285577;border-radius:9px;font-size:13px}
+@media(max-width:600px){.onlineGrid{grid-template-columns:1fr}#onlinePanel .card{padding:14px}}
 </style></head><body>
 <section id="home" class="screen on"><div class="card">
 <div class="homeHero"><span class="heroTag">MOBILE ACTION GAME</span><h1 class="logo">GKEET</h1><div class="tag">BATTLE STRIKE</div><p class="heroText">ENTER THE BATTLEFIELD • CHOOSE YOUR WEAPON • CONQUER 20 UNIQUE ZONES</p><div class="heroSoldier" aria-hidden="true">🪖</div></div>
@@ -34,9 +42,35 @@
 <div class="mapStrip"><div class="mapTile"><b>🌆</b>NEON CITY</div><div class="mapTile"><b>🏜️</b>DESERT</div><div class="mapTile"><b>❄️</b>FROST BASE</div><div class="mapTile"><b>🌴</b>JUNGLE</div><div class="mapTile"><b>🌋</b>LAVA ZONE</div></div></div>
 <p class="note">Single-player prototype. Live online rooms require a separate multiplayer server.</p>
 </div></section>
-<section id="maps" class="screen"><div class="card"><button id="back">← BACK</button><h2>CHOOSE BATTLE ZONE</h2><p class="note">Win battles to unlock more maps.</p><div id="mapGrid" class="grid"></div></div></section>
+
+<section id="onlinePanel" class="screen"><div class="card">
+<div style="padding:4px 0 14px"><button id="onlineBack">← BACK</button><h2 style="margin:16px 0 4px">🌐 ONLINE ROOMS</h2><p class="note" style="padding:0">Create a room or join friends using a 6-character code.</p></div>
+<div id="onlineAuth">
+<p class="sectionLabel">PLAYER ACCOUNT</p>
+<input id="onlineName" class="onlineField" maxlength="24" placeholder="Player name">
+<input id="onlineEmail" class="onlineField" type="email" autocomplete="email" placeholder="Email address">
+<input id="onlinePassword" class="onlineField" type="password" autocomplete="current-password" placeholder="Password (at least 6 characters)">
+<div class="onlineGrid"><button class="primary" id="onlineSignIn">SIGN IN</button><button id="onlineSignUp">CREATE ACCOUNT</button></div>
+<div id="onlineAuthStatus" class="onlineStatus">Sign in or create an account to enter online rooms.</div>
+</div>
+<div id="onlineLobby" hidden>
+<div class="onlineStatus" id="onlineUserLabel">Signed in</div>
+<div class="onlineGrid"><button class="primary" id="createRoom">＋ CREATE ROOM</button><button id="quickRoom">⚡ QUICK ROOM</button></div>
+<p class="sectionLabel">JOIN WITH ROOM CODE</p>
+<input id="roomCode" class="onlineField" maxlength="6" autocapitalize="characters" placeholder="ENTER 6-CHARACTER CODE">
+<button class="primary" id="joinRoom" style="width:100%">JOIN ROOM</button>
+<div id="roomStatus" class="onlineStatus">You are not in a room yet.</div>
+<div id="roomDetails" hidden>
+<p class="sectionLabel">ROOM CODE — SHARE WITH FRIENDS</p><h2 id="roomCodeDisplay" style="letter-spacing:7px;text-align:center;color:#ffda52"></h2>
+<p class="sectionLabel">PLAYERS IN ROOM</p><div id="onlinePlayers" class="onlinePlayers"></div>
+<div class="onlineGrid"><button id="copyRoomCode">COPY CODE</button><button id="leaveRoom">LEAVE ROOM</button></div>
+<p class="note" style="padding:0">Room lobby and live presence are connected. Real-time player movement, shooting and match start are still being integrated.</p>
+</div>
+<button id="onlineSignOut" style="width:100%;margin-top:10px">SIGN OUT</button>
+</div></div></section>
+\n<section id="maps" class="screen"><div class="card"><button id="back">← BACK</button><h2>CHOOSE BATTLE ZONE</h2><p class="note">Win battles to unlock more maps.</p><div id="mapGrid" class="grid"></div></div></section>
 <main id="game" class="game"><canvas id="view"></canvas><div class="hud"><div class="stat">GKEET <div class="health"><i id="hp"></i></div></div><div class="stat" id="mapName">ZONE 01</div><div class="stat"><span id="ammo">30 / 120</span><br><span id="score">KILLS 0</span></div></div><button class="top" id="pause">Ⅱ</button><div class="controls"><div class="cluster"><button class="ctrl" data-k="left">◀</button><button class="ctrl" data-k="right">▶</button><button class="ctrl jump" data-k="jump">⬆</button></div><div class="cluster"><button class="ctrl reload" data-k="reload">RELOAD</button><button class="ctrl" id="weaponBtn" type="button">GUN</button><button class="ctrl fire" data-k="fire">●</button></div></div><div class="overlay" id="overlay"><div class="card"><h2 id="result">PAUSED</h2><p id="message">Take a breath.</p><div class="actions"><button class="primary" id="resume">RESUME</button><button id="again">RETRY</button><button id="homeBtn" class="wide">MAIN MENU</button></div></div></div></main>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script><script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),cv=$('view'),c=cv.getContext('2d');
 const maps=[
@@ -44,7 +78,7 @@ const maps=[
 let W=0,H=0,ground=0,cam=0,level=1,wave=1,wavesPerZone=3,unlocked=+(localStorage.gkeetShooterUnlocked||1),kills=0,paused=false,ended=false,keys={},bullets=[],enemies=[],platforms=[],particles=[],pickups=[],last=0,raf=0,ammo=30,reserve=120,reloading=false,reloadAt=0,weapon=0,score=0,training=false,combo=0,comboUntil=0,headshots=0;
 const weapons=[{name:'ASSAULT',damage:24,rate:170,speed:13,mag:30},{name:'SMG',damage:13,rate:85,speed:12,mag:45},{name:'SNIPER',damage:65,rate:650,speed:19,mag:8},{name:'SHOTGUN',damage:12,rate:500,speed:11,mag:6,pellets:6}];let lastShot=0;
 function resize(){let d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;c.setTransform(d,0,0,d,0,0);ground=H*.77}addEventListener('resize',resize);resize();
-function screen(id){$('home').classList.remove('on');$('maps').classList.remove('on');$('game').classList.remove('on');$(id).classList.add('on')}
+function screen(id){['home','maps','onlinePanel','game'].forEach(k=>$(k).classList.remove('on'));$(id).classList.add('on')}
 function buildMaps(){let g=$('mapGrid');g.innerHTML='';maps.forEach((m,i)=>{let b=document.createElement('button');b.textContent=(i+1<=unlocked?'':'🔒 ')+(i+1)+'\n'+m[0];b.disabled=i+1>unlocked;b.onclick=()=>start(i+1,false);g.append(b)})}
 function start(n,practice){level=n;wave=1;training=practice;kills=0;score=0;combo=0;headshots=0;comboUntil=0;ammo=weapons[weapon].mag;reserve=120;reloading=false;paused=false;ended=false;bullets=[];particles=[];pickups=[];enemies=[];keys={};cam=0;player.x=90;player.y=ground-4;player.vx=0;player.vy=0;player.hp=100;player.face=1;player.onGround=true;platforms=[];let count=4+(n%4);for(let i=0;i<count;i++){let x=280+i*210+(i%2)*40;platforms.push({x,y:ground-90-(i%3)*65,w:100+(i%3)*25,h:14})}for(let i=0;i<(practice?2:4+Math.min(n,6));i++)spawnEnemy(470+i*260);$('mapName').textContent='ZONE '+String(n).padStart(2,'0')+' • WAVE 1/'+(practice?1:wavesPerZone);$('overlay').classList.remove('on');screen('game');last=performance.now();loop(last)}
 const player={x:90,y:0,vx:0,vy:0,hp:100,face:1,onGround:false};
@@ -87,8 +121,8 @@ soldier(player.x,player.y,player.face,false);for(let e of enemies)if(!e.dead)sol
 function loop(now){if(!paused&&!ended){now=Number.isFinite(now)?now:performance.now();let dt=Math.max(0,Math.min(40,now-last));last=now;update(dt);draw();raf=requestAnimationFrame(loop)}}
 function pause(){if(ended)return;paused=!paused;if(paused){cancelAnimationFrame(raf);$('result').textContent='PAUSED';$('message').textContent='Battle paused.';$('resume').textContent='RESUME';$('resume').onclick=pause;$('overlay').classList.add('on')}else{$('overlay').classList.remove('on');last=performance.now();raf=requestAnimationFrame(loop)}}
 $('weaponBtn').onclick=()=>{weapon=(weapon+1)%weapons.length;ammo=Math.min(ammo,weapons[weapon].mag);$('ammo').textContent=ammo+' / '+reserve+' • '+weapons[weapon].name;$('weaponBtn').textContent=weapons[weapon].name.slice(0,3)};
-$('quick').onclick=()=>start(unlocked,false);$('choose').onclick=()=>{buildMaps();screen('maps')};$('training').onclick=()=>start(1,true);$('back').onclick=()=>screen('home');$('pause').onclick=pause;$('again').onclick=()=>start(level,false);$('homeBtn').onclick=()=>{cancelAnimationFrame(raf);screen('home')};$('online').onclick=()=>alert('Online rooms are planned. A dedicated multiplayer server must be connected before players can join each other live.');
+$('quick').onclick=()=>start(unlocked,false);$('choose').onclick=()=>{buildMaps();screen('maps')};$('training').onclick=()=>start(1,true);$('back').onclick=()=>screen('home');$('pause').onclick=pause;$('again').onclick=()=>start(level,false);$('homeBtn').onclick=()=>{cancelAnimationFrame(raf);screen('home')};
 document.querySelectorAll('[data-k]').forEach(b=>{let k=b.dataset.k;let down=e=>{e.preventDefault();keys[k]=true};let up=e=>{e.preventDefault();keys[k]=false};b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)});
 addEventListener('keydown',e=>{let k={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'jump',w:'jump',' ':'jump',j:'fire',r:'reload'}[e.key]||({ArrowLeft:'left',ArrowRight:'right'}[e.key]);if(k){e.preventDefault();keys[k]=true}if(e.key==='Escape')pause();if(e.key==='1'||e.key==='2'||e.key==='3'||e.key==='4'){weapon=+e.key-1;ammo=Math.min(ammo,weapons[weapon].mag)}});addEventListener('keyup',e=>{let k={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'jump',w:'jump',' ':'jump',j:'fire',r:'reload'}[e.key];if(k)keys[k]=false});document.addEventListener('visibilitychange',()=>{if(document.hidden&&$('game').classList.contains('on')&&!paused&&!ended)pause()});$('resume').onclick=pause;
 })();
-</script></body></html>
+</script><script src="online.js"></script></body></html>
