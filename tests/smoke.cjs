@@ -65,13 +65,15 @@ const server = http.createServer((req, res) => {
     await page.waitForTimeout(80);
     assert.equal((await page.evaluate(() => window.__gkeetDebug())).playerGuard, false, 'keyboard guard should release');
 
-    await page.keyboard.down('ArrowRight');
-    await page.keyboard.up('ArrowRight');
+    const rightDashPad = page.locator('[data-key="right"]');
+    await rightDashPad.dispatchEvent('pointerdown', { pointerId: 31, pointerType: 'touch', isPrimary: true });
+    await rightDashPad.dispatchEvent('pointerup', { pointerId: 31, pointerType: 'touch', isPrimary: true });
     await page.waitForTimeout(90);
-    await page.keyboard.down('ArrowRight');
+    await rightDashPad.dispatchEvent('pointerdown', { pointerId: 32, pointerType: 'touch', isPrimary: true });
+    await page.waitForFunction(() => window.__gkeetDebug().playerDashTimer > 0, null, { timeout: 1500 });
     const dashState = await page.evaluate(() => window.__gkeetDebug());
-    assert.ok(dashState.playerDashTimer > 0, 'double-tap movement should activate dash');
-    await page.keyboard.up('ArrowRight');
+    assert.ok(dashState.playerDashTimer > 0, 'double-tap touch movement should activate dash');
+    await rightDashPad.dispatchEvent('pointerup', { pointerId: 32, pointerType: 'touch', isPrimary: true });
 
     const before = Number(await page.locator('#timer').textContent());
     try { await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 }); } catch (error) { console.error('Classic timer state:', await page.evaluate(() => ({ timer: document.querySelector('#timer')?.textContent, debug: window.__gkeetDebug?.() })), 'browser errors:', pageErrors, 'console warnings:', consoleWarnings); throw error; }
