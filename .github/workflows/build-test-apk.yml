@@ -30,10 +30,18 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Install Android SDK 36
+      - name: Install Android command-line tools and SDK 36
         run: |
-          yes | sdkmanager --licenses >/dev/null
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME}}"
+          mkdir -p "$SDK_ROOT/cmdline-tools" /tmp/android-cli
+          curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/android-cli.zip
+          unzip -q /tmp/android-cli.zip -d /tmp/android-cli
+          rm -rf "$SDK_ROOT/cmdline-tools/latest"
+          mv /tmp/android-cli/cmdline-tools "$SDK_ROOT/cmdline-tools/latest"
+          echo "$SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          export PATH="$SDK_ROOT/cmdline-tools/latest/bin:$PATH"
+          yes | sdkmanager --sdk_root="$SDK_ROOT" --licenses >/dev/null
+          sdkmanager --sdk_root="$SDK_ROOT" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Install dependencies and bundle offline 3D engine
         run: |
