@@ -33,5 +33,8 @@ jobs:
           path: /tmp/gkeet-gameplay.png
           if-no-files-found: ignore
 
+      - name: Validate online multiplayer client syntax
+        run: node --check www/online.js
+
       - name: Validate game JavaScript syntax
         run: node -e "const fs=require('fs');for(const f of ['www/index.html','www/shooter.html']){const h=fs.readFileSync(f,'utf8');for(const m of h.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)){if(m[1].trim())new Function(m[1])}console.log(f+' syntax OK')}"
