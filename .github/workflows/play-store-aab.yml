@@ -1,0 +1,104 @@
+name: Build GKEET Google Play AAB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install Android SDK 36
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Install dependencies and bundle offline Three.js
+        run: |
+          npm install
+          mkdir -p www/vendor
+          cp node_modules/three/build/three.min.js www/vendor/three.min.js
+
+      - name: Validate game JavaScript
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('www/index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)]
+            .map(match => match[1]).filter(script => script.trim());
+          if (!scripts.length) throw new Error('No game script found');
+          scripts.forEach(script => new Function(script));
+          console.log('GKEET game JavaScript syntax OK');
+          NODE
+
+      - name: Generate Android project
+        run: |
+          npx cap add android
+          sed -i 's/android:name=".MainActivity"/android:name=".MainActivity" android:screenOrientation="landscape"/' android/app/src/main/AndroidManifest.xml
+          sed -i 's/compileSdkVersion = [0-9]*/compileSdkVersion = 36/' android/variables.gradle
+          sed -i 's/targetSdkVersion = [0-9]*/targetSdkVersion = 36/' android/variables.gradle
+
+      - name: Configure Play upload signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64" || (echo "Missing GitHub secret ANDROID_KEYSTORE_BASE64" && exit 1)
+          test -n "$ANDROID_KEYSTORE_PASSWORD" || (echo "Missing GitHub secret ANDROID_KEYSTORE_PASSWORD" && exit 1)
+          test -n "$ANDROID_KEY_ALIAS" || (echo "Missing GitHub secret ANDROID_KEY_ALIAS" && exit 1)
+          test -n "$ANDROID_KEY_PASSWORD" || (echo "Missing GitHub secret ANDROID_KEY_PASSWORD" && exit 1)
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/gkeet-upload.jks"
+          cat >> android/app/build.gradle <<'GRADLE'
+
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file(System.getenv("GKEET_KEYSTORE_PATH"))
+                      storePassword System.getenv("GKEET_KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("GKEET_KEY_ALIAS")
+                      keyPassword System.getenv("GKEET_KEY_PASSWORD")
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                      minifyEnabled false
+                  }
+              }
+          }
+          GRADLE
+        shell: bash
+
+      - name: Build signed Play Store bundle
+        working-directory: android
+        env:
+          GKEET_KEYSTORE_PATH: ${{ runner.temp }}/gkeet-upload.jks
+          GKEET_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          GKEET_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          GKEET_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease
+
+      - name: Upload signed AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: GKEET-Play-Store-AAB
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
