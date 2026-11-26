@@ -143,6 +143,7 @@ const server = http.createServer((req, res) => {
         sendHit: (userId, damage) => window.__gkeetPvPHits.push({ userId, damage })
       };
     });
+    await page.waitForTimeout(120);
     await page.keyboard.down('j');
     await page.evaluate(() => window.__gkeetShooterTestStep(12));
     await page.keyboard.up('j');
