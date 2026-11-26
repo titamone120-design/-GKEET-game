@@ -49,7 +49,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#timer').textContent(), pausedAt, 'timer must stop while paused');
 
     await page.getByRole('button', { name: 'RESUME' }).click();
-    await page.waitForTimeout(1100);
+    await page.waitForFunction((previous) => Number(document.querySelector('#timer').textContent) < Number(previous), pausedAt, { timeout: 7000 });
     assert.ok(Number(await page.locator('#timer').textContent()) < Number(pausedAt), 'timer should resume');
 
     await page.locator('#pauseBtn').click();
