@@ -15,6 +15,7 @@
 <section id="records" class="screen"><div class="menuCard"><button class="back" id="recordsBack">← BACK</button><h2>YOUR RECORDS</h2><h1 id="recordLevel">1 / 20</h1><p id="recordWins" class="smallNote">Victories: 0</p><button class="primary" id="recordsPlay">CONTINUE</button></div></section>
 <main id="game" class="game"><canvas id="arena"></canvas><div class="hud"><div class="fighterHud"><div class="fighterName">GKEET</div><div class="bar"><div class="fill" id="playerBar"></div></div><div class="energyTrack"><span>SPECIAL</span><div class="energyBar"><div id="energyBar"></div></div></div></div><div class="centerHud">STAGE <strong id="stageLabel">01</strong><span id="timer">60</span><div id="comboLabel" class="comboLabel"></div></div><div class="fighterHud enemy"><div class="fighterName" id="enemyName">THE RIVAL</div><div class="bar"><div class="fill" id="enemyBar"></div></div></div></div><div class="topActions"><button id="pauseBtn">Ⅱ PAUSE</button></div><div class="controls"><div class="pad"><button class="ctrl" data-key="left">◀</button><button class="ctrl" data-key="right">▶</button><button class="ctrl jump" data-key="jump">⬆</button></div><div class="attacks"><button class="ctrl hit" data-key="punch">✊</button><button class="ctrl hit" data-key="kick">🦶</button><button class="ctrl jump" data-key="special">✦</button><button class="ctrl guard" data-key="guard">🛡</button></div></div><div class="overlay" id="overlay"><div class="overlayCard"><h2 id="overlayTitle">PAUSED</h2><p id="overlayText">Take a breath, fighter.</p><div class="rowBtns" id="overlayButtons"></div></div></div></main>
 <script src="vendor/three.min.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
 <script>
 (()=>{
 const $=id=>document.getElementById(id),canvas=$('arena'),ctx=canvas.getContext('2d');
@@ -22,6 +23,7 @@ const names=['ROOKIE','IRON FIST','NIGHT STALKER','RED FANG','THE BRUISER','DARK
 let screen='menu',stage=1,unlocked=+(localStorage.gkeetUnlocked||1),wins=+(localStorage.gkeetWins||0),sound=localStorage.gkeetSound!=='0',difficulty=+(localStorage.gkeetDifficulty||1),paused=false,over=false,remaining=60,last=0,raf=0,comboCount=0,comboUntil=0;
 let W=0,H=0,ground=0,keys={},particles=[],shake=0,lastDirectionalTap={left:0,right:0};
 let scene3d=null,renderer3d=null,camera3d=null,world3d=null,actors3d=[];
+let fighterMixers=[null,null],fighterClips=[{},{}],fighterActions=[null,null],frameDelta=1/60;
 function init3D(){
  if(!window.THREE)return;
  try{
@@ -147,18 +149,46 @@ function init3D(){
   }
   actors3d=[fighter(false),fighter(true,0)];
   actors3d[0].position.x=-4;actors3d[1].position.x=4;actors3d[0].rotation.y=Math.PI/2;actors3d[1].rotation.y=-Math.PI/2;
-  window.setGkeetEnemyVariant=(n)=>{if(!scene3d||!actors3d[1])return;const old=actors3d[1];scene3d.remove(old);old.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});actors3d[1]=fighter(true,n-1);actors3d[1].position.x=4;actors3d[1].rotation.y=-Math.PI/2;};
+  const disposeActor=(actor)=>{if(!actor)return;actor.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});};
+  const enemySuitColors=[0xb42d49,0x237f9c,0xc35c23,0x7945a5,0x668b37,0x64778c,0xc33c40,0x9a792a,0x2c7964,0x80577f,0x4269a8,0xa46a36,0x66517c,0x2e8b92,0x9d4b42,0x4d6c98,0x8b6b31,0x8d3c5c,0x547b3c,0x655040];
+  window.setGkeetEnemyVariant=(n)=>{if(!scene3d||!actors3d[1])return;const actor=actors3d[1];if(actor.userData.isRigged){actor.traverse(o=>{if(!o.isMesh||!o.material)return;const list=Array.isArray(o.material)?o.material:[o.material];const next=list.map(m=>{const copy=m.clone();if(/Hair/i.test(copy.name))copy.color.setHex(0x17131c);else if(/Eyes/i.test(copy.name))copy.color.setHex(0xe9a13c);else copy.color.setHex(enemySuitColors[(n-1)%enemySuitColors.length]);return copy;});o.material=Array.isArray(o.material)?next:next[0];});return;}scene3d.remove(actor);disposeActor(actor);actors3d[1]=fighter(true,n-1);actors3d[1].position.x=4;actors3d[1].rotation.y=-Math.PI/2;};
+  function loadRiggedFighter(index){
+   if(!THREE.GLTFLoader)return;
+   const loader=new THREE.GLTFLoader();
+   loader.load('models/KinemIQ_Mannequin.glb',(gltf)=>{
+    const rig=gltf.scene;rig.scale.setScalar(1.72);const bounds=new THREE.Box3().setFromObject(rig);rig.position.y-=bounds.min.y;
+    rig.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material){o.material=o.material.clone();o.material.metalness=.12;o.material.roughness=.62;}}});
+    const actor=new THREE.Group();actor.add(rig);actor.userData.isRigged=true;actor.userData.currentAnim='';
+    actor.position.x=index===0?-4:4;actor.rotation.y=index===0?Math.PI/2:-Math.PI/2;
+    const previous=actors3d[index];scene3d.remove(previous);disposeActor(previous);scene3d.add(actor);actors3d[index]=actor;
+    fighterMixers[index]=new THREE.AnimationMixer(rig);
+    if(gltf.animations&&gltf.animations[0])fighterClips[index].idle=gltf.animations[0];
+    const clips={idle:'Idle_relaxed',walk:'Walk_forwards',punch:'Punch_jab_left_2',kick:'Punch_cross_right_2',special:'Punch_hook_right_2',hit:'Hit_knockback',jump:'Jump_in_the_air',dash:'Dodge_roll',guard:'Idle_relaxed'};
+    Object.entries(clips).forEach(([key,file])=>loader.load('models/'+file+'.glb',(clipGltf)=>{if(clipGltf.animations&&clipGltf.animations[0])fighterClips[index][key]=clipGltf.animations[0];},undefined,(err)=>console.warn('GKEET animation unavailable:',file,err)));
+    if(index===1)window.setGkeetEnemyVariant(stage);
+   },undefined,(err)=>console.warn('GKEET rigged fighter unavailable; using built-in 3D fighter.',err));
+  }
+  loadRiggedFighter(0);loadRiggedFighter(1);
   window.addEventListener('resize',()=>{if(!renderer3d)return;renderer3d.setSize(innerWidth,innerHeight);camera3d.aspect=innerWidth/innerHeight;camera3d.updateProjectionMatrix()});
  }catch(err){console.warn('3D renderer unavailable',err);if(renderer3d){renderer3d.domElement.remove();renderer3d=null}canvas.style.display='block'}
 }
+function playRigAnimation(index,name){const mixer=fighterMixers[index],clip=fighterClips[index][name];if(!mixer||!clip)return;const old=fighterActions[index],action=mixer.clipAction(clip);if(old===action&&action.isRunning())return;action.reset();const looping=name==="idle"||name==="walk"||name==="guard";action.setLoop(looping?THREE.LoopRepeat:THREE.LoopOnce,looping?Infinity:1);action.clampWhenFinished=!looping;action.timeScale=name==="walk"?1.15:name==="punch"||name==="kick"||name==="special"?1.65:name==="hit"?1.35:1;action.fadeIn(.09).play();if(old&&old!==action)old.fadeOut(.09);fighterActions[index]=action;actors3d[index].userData.currentAnim=name;}
 function applyStageTheme(n){if(!scene3d)return;const themes=[{bg:0x090b20,fog:0x090b20,glow:0x25cfff},{bg:0x250b16,fog:0x35101b,glow:0xff4b55},{bg:0x071b30,fog:0x0c2940,glow:0x54dcff},{bg:0x201027,fog:0x2c1638,glow:0xffbd58}];const t=themes[Math.floor((n-1)/5)%themes.length];scene3d.background.setHex(t.bg);if(scene3d.fog)scene3d.fog.color.setHex(t.fog);scene3d.traverse(o=>{if(o.isPointLight)o.color.setHex(t.glow);if(o.geometry&&o.geometry.type==='TorusGeometry'&&o.material&&o.material.color)o.material.color.setHex(t.glow)});}
 function draw3D(){
  if(!renderer3d)return false;
  const scale=14/Math.max(1,W),toX=x=>(x-W/2)*scale,now=performance.now()*.006;
  [p,e].forEach((f,i)=>{const a=actors3d[i],moving=Math.abs(f.vx)>.35,phase=now*(moving?2.5:1);
- a.position.x=toX(f.x);a.position.y=Math.max(0,(ground-f.y-70)*scale*.32);a.position.z=i?-.15:.15;a.rotation.y=i?Math.PI:0;
+ if(!a)return;
+ a.position.x=toX(f.x);a.position.y=Math.max(0,(ground-f.y-70)*scale*.32);a.position.z=i?-.15:.15;
+ a.rotation.y=f.face>0?Math.PI/2:-Math.PI/2;
+ if(a.userData.isRigged){
+  const anim=f.flash>0?'hit':f.dashTimer>0?'dash':f.y<ground-70?'jump':f.guard?'guard':f.attack>0?(f.kind==='kick'?'kick':f.kind==='special'?'special':'punch'):moving?'walk':'idle';
+  if(a.userData.currentAnim!==anim)playRigAnimation(i,anim);
+  if(fighterMixers[i])fighterMixers[i].update(frameDelta);
+  return;
+ }
  const swing=moving?Math.sin(phase)*.48:Math.sin(phase)*.025,attacking=f.attack>0,kicking=attacking&&f.kind==='kick',special=attacking&&f.kind==='special',hitReact=f.flash>0;
- a.rotation.y=f.face>0?Math.PI/2:-Math.PI/2;a.rotation.z=i===0&&f.dashTimer>0?-.12:0;
+ a.rotation.z=i===0&&f.dashTimer>0?-.12:0;
  a.userData.legs.forEach((l,j)=>{const lead=j===0;l.hip.rotation.x=kicking&&lead?-.95:(lead?1:-1)*swing;l.knee.rotation.x=kicking&&lead?.5:moving?Math.max(0,Math.sin(phase+(j?Math.PI:0)))*.7:0});
  a.userData.arms.forEach(arm=>{const back=arm.side===-1;arm.shoulder.rotation.x=attacking?(special?-1.05:kicking?-.18:-1.25):f.guard?-.72:hitReact?-.42:(back?-.12:.08)+swing*(back?-.4:.35);arm.shoulder.rotation.z=arm.side*(attacking?(special?.48:.18):f.guard?.58:.08);arm.elbow.rotation.x=attacking?(special?-.25:-.45):f.guard?-.85:Math.max(0,-swing)*.35;arm.wrist.rotation.x=attacking?-.15:f.guard?-.3:0});
  a.userData.torso.rotation.z=hitReact?Math.sin(now*3)*.11:moving?Math.sin(phase)*.035:attacking?.055:0;a.userData.head.rotation.y=Math.sin(phase*.45)*.04+(hitReact?.12:0);
@@ -262,7 +292,7 @@ drawFighter(p,'#f1f1f4','#25e6ff',false);drawFighter(e,'#f1f1f4','#ff4b58',true)
 if((p.attack>0&&p.kind==='special')||(e.attack>0&&e.kind==='special')){ctx.save();ctx.globalCompositeOperation='lighter';let left=Math.min(p.x,e.x),right=Math.max(p.x,e.x);let beam=ctx.createLinearGradient(left,0,right,0);beam.addColorStop(0,'#23dfff00');beam.addColorStop(.5,'#b8ffff');beam.addColorStop(1,'#24aaff00');ctx.fillStyle=beam;ctx.shadowColor='#45dfff';ctx.shadowBlur=30;ctx.beginPath();ctx.moveTo(left,H*.48);ctx.lineTo(right,H*.48-9);ctx.lineTo(right,H*.48+9);ctx.lineTo(left,H*.48);ctx.fill();ctx.restore()}
 particles.forEach(q=>{ctx.globalAlpha=q.life/24;ctx.fillStyle=q.color;ctx.shadowColor=q.color;ctx.shadowBlur=10;ctx.fillRect(q.x,q.y,5,5)});ctx.globalAlpha=1;ctx.restore()
 }
-function loop(now){let dt=Math.min(40,now-last);last=now;update(dt);draw();if(!over)raf=requestAnimationFrame(loop)}
+function loop(now){let dt=Math.min(40,now-last);last=now;frameDelta=dt/1000;update(dt);draw();if(!over)raf=requestAnimationFrame(loop)}
 function buttons(items){$('overlayButtons').innerHTML='';items.forEach(([label,fn,cls])=>{let b=document.createElement('button');b.textContent=label;if(cls)b.className=cls;b.onclick=fn;$('overlayButtons').append(b)})}
 function finish(win){if(over)return;over=true;cancelAnimationFrame(raf);if(win){wins++;unlocked=Math.max(unlocked,Math.min(20,stage+1));localStorage.gkeetWins=wins;localStorage.gkeetUnlocked=unlocked;$('overlayTitle').textContent=stage===20?'GKEET CHAMPION!':'VICTORY!';$('overlayText').textContent=stage===20?'You conquered the Shadow Arena.':'You defeated '+names[stage-1]+'. Stage '+Math.min(20,stage+1)+' unlocked.';buttons(stage<20?[['NEXT STAGE',()=>start(stage+1),'primary'],['LEVELS',()=>{levelButtons();show('levels')}],['MENU',menu]]:[['PLAY AGAIN',()=>start(20),'primary'],['MENU',menu]])}else{$('overlayTitle').textContent='DEFEATED';$('overlayText').textContent='The rival won this round. Train and try again.';buttons([['RETRY',()=>start(stage),'primary'],['LEVELS',()=>{levelButtons();show('levels')}],['MENU',menu]])}$('overlay').classList.add('show')}
 function pause(){if(screen!=='game'||over)return;paused=!paused;if(paused){cancelAnimationFrame(raf);keys={};$('overlayTitle').textContent='PAUSED';$('overlayText').textContent='The fight is waiting.';buttons([['RESUME',pause,'primary'],['RESTART',()=>start(stage)],['MENU',menu]]);$('overlay').classList.add('show')}else{$('overlay').classList.remove('show');last=performance.now();raf=requestAnimationFrame(loop)}}
