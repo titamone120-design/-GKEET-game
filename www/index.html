@@ -148,7 +148,7 @@ function init3D(){
    g.userData={arms,legs,torso,head};scene3d.add(g);return g;
   }
   actors3d=[fighter(false),fighter(true,0)];
-  actors3d[0].position.x=-4;actors3d[1].position.x=4;actors3d[0].rotation.y=Math.PI/2;actors3d[1].rotation.y=-Math.PI/2;
+  actors3d[0].position.x=-4;actors3d[1].position.x=4;actors3d[0].rotation.y=1.02;actors3d[1].rotation.y=-1.02;
   const disposeActor=(actor)=>{if(!actor)return;actor.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}});};
   const enemySuitColors=[0xb42d49,0x237f9c,0xc35c23,0x7945a5,0x668b37,0x64778c,0xc33c40,0x9a792a,0x2c7964,0x80577f,0x4269a8,0xa46a36,0x66517c,0x2e8b92,0x9d4b42,0x4d6c98,0x8b6b31,0x8d3c5c,0x547b3c,0x655040];
   function addRigHeadgear(rig,index,variant=0){
@@ -164,7 +164,7 @@ function init3D(){
    const sleeve=new THREE.Color(suit).multiplyScalar(.58).getHex(),pants=0x202b3c,boots=0x101722;
    rig.traverse(o=>{if(!o.isMesh||!o.material)return;const list=Array.isArray(o.material)?o.material:[o.material];const next=list.map(original=>{const m=original.clone();if(/Hair/i.test(m.name)){m.color.setHex(index===0?0x3b241b:0x17131c);return m;}if(/Eyes/i.test(m.name)){m.color.setHex(0xf4f5ff);return m;}m.color.setHex(0xffffff);m.vertexColors=true;const pos=o.geometry.attributes.position;if(pos){const colors=new Float32Array(pos.count*3);for(let i=0;i<pos.count;i++){const x=Math.abs(pos.getX(i)),y=pos.getY(i);let hex=skin;if(y<.18)hex=boots;else if(y<.86)hex=pants;else if(y<.96&&x<.32)hex=accent;else if(y>.88&&y<1.52&&x<.30)hex=suit;else if(y>.82&&y<1.52&&x>=.30)hex=x>.68?accent:sleeve;const col=new THREE.Color(hex);colors[i*3]=col.r;colors[i*3+1]=col.g;colors[i*3+2]=col.b;}o.geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));}return m;});o.material=Array.isArray(o.material)?next:next[0];});
   }
-  window.setGkeetEnemyVariant=(n)=>{if(!scene3d||!actors3d[1])return;const actor=actors3d[1];if(actor.userData.isRigged){applyRigOutfit(actor.children[0],1,n-1);return;}scene3d.remove(actor);disposeActor(actor);actors3d[1]=fighter(true,n-1);actors3d[1].position.x=4;actors3d[1].rotation.y=-Math.PI/2;};
+  window.setGkeetEnemyVariant=(n)=>{if(!scene3d||!actors3d[1])return;const actor=actors3d[1];if(actor.userData.isRigged){applyRigOutfit(actor.children[0],1,n-1);return;}scene3d.remove(actor);disposeActor(actor);actors3d[1]=fighter(true,n-1);actors3d[1].position.x=4;actors3d[1].rotation.y=-1.02;};
   function loadRiggedFighter(index){
    if(!THREE.GLTFLoader)return;
    const loader=new THREE.GLTFLoader();
@@ -181,7 +181,8 @@ function init3D(){
     if(index===1)window.setGkeetEnemyVariant(stage);
    },undefined,(err)=>console.warn('GKEET rigged fighter unavailable; using built-in 3D fighter.',err));
   }
-  loadRiggedFighter(0);loadRiggedFighter(1);
+  // Keep the complete built-in fighters visible. The optional mannequin GLB can replace them with an incomplete-looking rig on some phones.
+  // The built-in fighters have explicit head, torso, both arms, hands, both legs, knees and boots.
   window.addEventListener('resize',()=>{if(!renderer3d)return;renderer3d.setSize(innerWidth,innerHeight);camera3d.aspect=innerWidth/innerHeight;camera3d.updateProjectionMatrix()});
  }catch(err){console.warn('3D renderer unavailable',err);if(renderer3d){renderer3d.domElement.remove();renderer3d=null}canvas.style.display='block'}
 }
@@ -204,7 +205,7 @@ function draw3D(){
  [p,e].forEach((f,i)=>{const a=actors3d[i],moving=Math.abs(f.vx)>.35,phase=now*(moving?2.5:1);
  if(!a)return;
  a.position.x=toX(f.x);a.position.y=Math.max(0,(ground-f.y-70)*scale*.32);a.position.z=i?-.15:.15;
- a.rotation.y=f.face>0?Math.PI/2:-Math.PI/2;
+ a.rotation.y=f.face>0?1.02:-1.02; // Three-quarter view keeps face, both arms and both legs visible
  if(a.userData.isRigged){
   const anim=f.flash>0?'hit':f.dashTimer>0?'dash':f.y<ground-70?'jump':f.guard?'guard':f.attack>0?(f.kind==='kick'?'kick':f.kind==='special'?'special':'punch'):moving?'walk':'idle';
   if(a.userData.currentAnim!==anim)playRigAnimation(i,anim);
