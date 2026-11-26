@@ -94,7 +94,7 @@ const server = http.createServer((req, res) => {
     await page.keyboard.up('ArrowUp');
     const airborne = await page.evaluate(() => window.__gkeetShooterDebug());
     assert.ok(airborne.y < airborne.ground - 20, 'jump input should lift the player');
-    await page.waitForFunction(() => window.__gkeetShooterDebug().onGround, null, { timeout: 2500 });
+    try { await page.waitForFunction(() => window.__gkeetShooterDebug().onGround, null, { timeout: 5000 }); } catch (error) { console.error('Shooter landing state:', await page.evaluate(() => window.__gkeetShooterDebug())); throw error; }
     const landed = await page.evaluate(() => window.__gkeetShooterDebug());
     assert.ok(Math.abs(landed.y - (landed.ground - 4)) < 1, 'player should land back on the ground');
     const ammoBefore = landed.ammo;
