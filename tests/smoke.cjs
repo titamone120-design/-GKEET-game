@@ -44,6 +44,8 @@ const server = http.createServer((req, res) => {
       throw error;
     }
     await page.screenshot({ path: '/tmp/gkeet-gameplay.png' });
+    await page.locator('[data-key="kick"]').click();
+    await page.waitForFunction(() => (window.__gkeetAnimationHistory?.[0] || []).includes('kick'), null, { timeout: 4000 });
 
     const before = Number(await page.locator('#timer').textContent());
     await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 });
