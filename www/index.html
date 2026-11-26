@@ -37,10 +37,10 @@ function init3D(){
   canvas.parentNode.insertBefore(renderer3d.domElement,canvas);
   canvas.style.display='none';
   scene3d=new THREE.Scene();scene3d.background=new THREE.Color(0x090b20);scene3d.fog=new THREE.Fog(0x090b20,18,42);
-  camera3d=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,100);camera3d.position.set(0,7,18);camera3d.lookAt(0,2,0);
-  scene3d.add(new THREE.HemisphereLight(0x9dbbff,0x25102d,2.0));
-  const key=new THREE.DirectionalLight(0xffe0c0,2.2);key.position.set(-5,10,8);key.castShadow=true;scene3d.add(key);
-  const rim=new THREE.PointLight(0x25cfff,55,25);rim.position.set(0,6,-5);scene3d.add(rim);
+  camera3d=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,100);camera3d.position.set(0,5.8,14);camera3d.lookAt(0,2,0);
+  scene3d.add(new THREE.HemisphereLight(0x9dbbff,0x25102d,1.25));
+  const key=new THREE.DirectionalLight(0xffe0c0,1.55);key.position.set(-5,10,8);key.castShadow=true;scene3d.add(key);
+  const rim=new THREE.PointLight(0x25cfff,28,25);rim.position.set(0,6,-5);scene3d.add(rim);
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,30),new THREE.MeshStandardMaterial({color:0x211b45,metalness:.35,roughness:.55}));
   floor.rotation.x=-Math.PI/2;floor.position.y=0;floor.receiveShadow=true;scene3d.add(floor);
   const grid=new THREE.GridHelper(36,36,0x31cfff,0x60449b);grid.position.y=.015;scene3d.add(grid);
@@ -156,7 +156,7 @@ function init3D(){
    if(!THREE.GLTFLoader)return;
    const loader=new THREE.GLTFLoader();
    loader.load('models/KinemIQ_Mannequin.glb',(gltf)=>{
-    const rig=gltf.scene;rig.scale.setScalar(1.72);const bounds=new THREE.Box3().setFromObject(rig);rig.position.y-=bounds.min.y;
+    const rig=gltf.scene;rig.scale.setScalar(2.05);const bounds=new THREE.Box3().setFromObject(rig);rig.position.y-=bounds.min.y;
     rig.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];const tinted=mats.map(m=>{const copy=m.clone();copy.metalness=.12;copy.roughness=.62;if(index===0){if(/Hair/i.test(copy.name))copy.color.setHex(0x4a2818);else if(/Eyes/i.test(copy.name))copy.color.setHex(0x42d9ee);else copy.color.setHex(0x238bb1);}return copy;});o.material=Array.isArray(o.material)?tinted:tinted[0];}}});
     const actor=new THREE.Group();actor.add(rig);actor.userData.isRigged=true;actor.userData.currentAnim='';
     actor.position.x=index===0?-4:4;actor.rotation.y=index===0?Math.PI/2:-Math.PI/2;
