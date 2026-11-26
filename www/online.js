@@ -176,7 +176,7 @@
   $("onlineSignOut").onclick = async () => { await leaveRoom(); await client.auth.signOut(); authMessage("Signed out."); };
   window.gkeetOnline = {
     get active() { return !!(room && channel); },
-    getRemotePlayers() { return Array.from(remotePlayers.values()); },
+    getRemotePlayers() { const now = Date.now(); return Array.from(remotePlayers.values()).filter((player) => !Number.isFinite(player.sent_at) || now - player.sent_at < 3000); },
     resetRemotePlayers() { remotePlayers.clear(); },
     async sendState(state) { if (!channel || !room || !session) return; const now = performance.now(); if (now - lastStateAt < 70) return; lastStateAt = now; await channel.send({ type: "broadcast", event: "player_state", payload: { ...state, user_id: session.user.id, player_name: $("lobbyPlayerName").value.trim() || "Player", sent_at: Date.now() } }); },
     async sendShot(shot) { if (!channel || !room || !session) return; await channel.send({ type: "broadcast", event: "player_shot", payload: { ...shot, user_id: session.user.id } }); },
