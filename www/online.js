@@ -55,6 +55,9 @@
     channel.on("broadcast", { event: "room_refresh" }, loadMembers);
     channel.on("broadcast", { event: "player_state" }, ({ payload }) => { if (payload?.user_id && payload.user_id !== session.user.id) remotePlayers.set(payload.user_id, payload); });
     channel.on("broadcast", { event: "player_shot" }, ({ payload }) => { if (payload?.user_id !== session.user.id) window.gkeetReceiveRemoteShot?.(payload); });
+    channel.on("broadcast", { event: "player_hit" }, ({ payload }) => {
+      if (payload?.target_user_id === session.user.id) window.gkeetReceiveRemoteHit?.(payload);
+    });
     channel.on("broadcast", { event: "match_start" }, ({ payload }) => { if (payload?.map_id) window.gkeetStartOnlineMatch?.(payload.map_id); roomMessage("MATCH STARTED • Fight!"); });
     channel.on("broadcast", { event: "match_result" }, ({ payload }) => { roomMessage((payload?.win ? "Player cleared the zone" : "Player was defeated") + (Number.isFinite(payload?.score) ? " • Score " + payload.score : "")); });
     channel.on("broadcast", { event: "room_closed" }, async () => { roomMessage("Room owner left. This room is closed."); await leaveRoom(); });
@@ -175,6 +178,10 @@
     resetRemotePlayers() { remotePlayers.clear(); },
     async sendState(state) { if (!channel || !room || !session) return; const now = performance.now(); if (now - lastStateAt < 70) return; lastStateAt = now; await channel.send({ type: "broadcast", event: "player_state", payload: { ...state, user_id: session.user.id, player_name: $("lobbyPlayerName").value.trim() || "Player", sent_at: Date.now() } }); },
     async sendShot(shot) { if (!channel || !room || !session) return; await channel.send({ type: "broadcast", event: "player_shot", payload: { ...shot, user_id: session.user.id } }); },
+    async sendHit(targetUserId, damage) {
+      if (!channel || !room || !session || !targetUserId || targetUserId === session.user.id) return;
+      await channel.send({ type: "broadcast", event: "player_hit", payload: { target_user_id: targetUserId, damage: Math.max(1, Math.min(100, Number(damage) || 1)), attacker_id: session.user.id } });
+    },
     async sendMatchResult(result) { if (!channel || !room || !session) return; await channel.send({ type: "broadcast", event: "match_result", payload: { ...result, user_id: session.user.id } }); }
   };
   $("onlineBack").onclick = () => {
