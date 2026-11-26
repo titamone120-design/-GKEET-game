@@ -50,6 +50,8 @@ function start(n,practice){level=n;wave=1;training=practice;kills=0;score=0;comb
 const player={x:90,y:0,vx:0,vy:0,hp:100,face:1,onGround:false};
 // Read-only state snapshot for automated gameplay QA.
 window.__gkeetShooterDebug=()=>({x:player.x,y:player.y,vy:player.vy,ground,onGround:player.onGround,hp:player.hp,ammo,reserve,enemyCount:enemies.filter(e=>!e.dead).length,bulletCount:bullets.length,wave,level,paused,ended,last,now:performance.now(),visibility:document.visibilityState,raf,platforms:platforms.map(p=>({x:p.x,y:p.y,w:p.w}))});
+// Deterministic fixed-step hook is enabled only by the automated test URL (?test=1).
+if(new URLSearchParams(location.search).has('test'))window.__gkeetShooterTestStep=(frames=1)=>{if(paused||ended||!$('game').classList.contains('on'))return window.__gkeetShooterDebug();for(let i=0;i<Math.min(600,Math.max(1,frames));i++){update(1000/60);draw()}return window.__gkeetShooterDebug()};
 function spawnEnemy(x,boss=false){let hp=(55+level*4)*(boss?9:1);enemies.push({x,y:ground-4,vx:0,vy:0,hp,max:hp,face:-1,fire:boss?650:900+Math.random()*1200,onGround:true,dead:false,boss})}
 function reload(){if(reloading||ammo===weapons[weapon].mag||reserve<=0)return;reloading=true;reloadAt=performance.now()+1250}
 function shoot(){let now=performance.now(),w=weapons[weapon];if(now-lastShot<w.rate||reloading)return;if(ammo<=0){reload();return}lastShot=now;ammo--;let count=w.pellets||1;for(let i=0;i<count;i++){let spread=(Math.random()-.5)*(w.pellets?.32:.025);bullets.push({x:player.x+player.face*22,y:player.y-28,vx:player.face*w.speed,vy:spread*w.speed,damage:w.damage,life:90,enemy:false})}tone(weapon===2?130:weapon===3?80:220,.035)}
