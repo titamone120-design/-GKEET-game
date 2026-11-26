@@ -130,6 +130,28 @@ const server = http.createServer((req, res) => {
     const fired = await page.evaluate(() => window.__gkeetShooterDebug());
     assert.ok(fired.ammo < ammoBefore, 'fire input should consume ammunition');
 
+    // Simulate a live opponent and verify that a local bullet sends targeted PvP damage.
+    await page.evaluate(() => {
+      const state = window.__gkeetShooterDebug();
+      window.__gkeetPvPHits = [];
+      window.gkeetOnline = {
+        active: true,
+        getRemotePlayers: () => [{ user_id: 'test-opponent', x: state.x + 85, y: state.y, face: -1, hp: 100, player_name: 'Opponent' }],
+        sendHit: (userId, damage) => window.__gkeetPvPHits.push({ userId, damage })
+      };
+    });
+    await page.keyboard.down('j');
+    await page.evaluate(() => window.__gkeetShooterTestStep(12));
+    await page.keyboard.up('j');
+    const pvpHits = await page.evaluate(() => window.__gkeetPvPHits);
+    assert.ok(pvpHits.length > 0, 'shooting a remote player should send a targeted hit event');
+    assert.equal(pvpHits[0].userId, 'test-opponent', 'PvP hit must target the correct opponent');
+
+    const hpBeforeRemoteHit = await page.evaluate(() => window.__gkeetShooterDebug().hp);
+    await page.evaluate(() => window.gkeetReceiveRemoteHit({ damage: 20, attacker_id: 'test-opponent' }));
+    const hpAfterRemoteHit = await page.evaluate(() => window.__gkeetShooterDebug().hp);
+    assert.equal(hpAfterRemoteHit, hpBeforeRemoteHit - 20, 'incoming PvP damage should reduce local health');
+
     await page.locator('#pause').click();
     assert.ok(await page.locator('#overlay').evaluate(el => el.classList.contains('on')), 'shooter pause overlay must open');
     await page.locator('#resume').click();
