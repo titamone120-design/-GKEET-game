@@ -35,6 +35,8 @@ The web-ready policy is at `docs/privacy-policy.html`. To publish it, open **Git
 
 ## Before submitting to Play Console
 
+- New Android phone apps and updates submitted from 31 August 2026 must target Android 16 / API 36 or higher; the release workflow is configured for API 36. <https://support.google.com/googleplay/android-developer/answer/11926878|Google Play target API policy>
+- If the developer account is a personal account created after 13 November 2023, Google Play requires a closed test with at least 12 testers opted in continuously for 14 days before production access can be requested. <https://support.google.com/googleplay/android-developer/answer/14151465|Google Play personal account testing requirements>
 - Create/verify the Google Play developer account.
 - Create the app listing and choose the final app name, category, contact details, and store description.
 - Prepare a 512×512 app icon, 1024×500 feature graphic, and phone screenshots.
