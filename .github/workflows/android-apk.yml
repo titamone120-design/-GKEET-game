@@ -1,4 +1,4 @@
-name: Build GKEET Android APK
+name: GKEET Gameplay Checks
 on:
   push:
     branches: [main]
@@ -15,11 +15,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
       - name: Install dependencies
         run: npm install
       - name: Bundle Three.js for offline 3D gameplay
@@ -40,16 +35,3 @@ jobs:
 
       - name: Validate game JavaScript syntax
         run: node -e "const fs=require('fs');for(const f of ['www/index.html','www/shooter.html']){const h=fs.readFileSync(f,'utf8');for(const m of h.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)){if(m[1].trim())new Function(m[1])}console.log(f+' syntax OK')}"
-      - name: Add Android platform
-        run: npx cap add android
-      - name: Set fighting game to landscape orientation
-        run: sed -i 's/android:name=".MainActivity"/android:name=".MainActivity" android:screenOrientation="landscape"/' android/app/src/main/AndroidManifest.xml
-      - name: Build debug APK
-        working-directory: android
-        run: ./gradlew assembleDebug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: GKEET-Android-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
