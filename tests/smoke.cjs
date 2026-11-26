@@ -43,7 +43,6 @@ const server = http.createServer((req, res) => {
       console.error('GKEET rig/animation load state:', await page.evaluate(() => window.__gkeetDebug()), 'console warnings:', consoleWarnings);
       throw error;
     }
-    await page.screenshot({ path: '/tmp/gkeet-gameplay.png' });
     const kickButton = page.locator('[data-key="kick"]');
     await kickButton.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', isPrimary: true });
     await page.waitForTimeout(180);
