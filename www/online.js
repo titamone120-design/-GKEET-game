@@ -48,6 +48,8 @@
       const peers = Object.values(channel.presenceState()).flat().map((peer) => ({
         user_id: peer.user_id, player_name: peer.player_name
       }));
+      const presentIds = new Set(peers.map((peer) => peer.user_id));
+      for (const userId of remotePlayers.keys()) if (!presentIds.has(userId)) remotePlayers.delete(userId);
       if (peers.length) renderPlayers(peers);
     });
     channel.on("broadcast", { event: "room_refresh" }, loadMembers);
@@ -66,7 +68,7 @@
   }
   async function createRoom() {
     if (!session) return;
-    const name = $("onlineName").value.trim() || "Player";
+    const name = $("lobbyPlayerName").value.trim() || $("onlineName").value.trim() || "Player";
     const created = await client.from("gkeet_rooms").insert({ owner_id: session.user.id, max_players: 6 }).select("id,code").single();
     if (created.error) { roomMessage("Create room failed: " + created.error.message); return; }
     const joined = await client.from("gkeet_room_members").insert({
@@ -78,7 +80,7 @@
   async function joinRoom() {
     if (!session) return;
     const code = $("roomCode").value.trim().toUpperCase();
-    const name = $("onlineName").value.trim() || "Player";
+    const name = $("lobbyPlayerName").value.trim() || $("onlineName").value.trim() || "Player";
     if (code.length !== 6) { roomMessage("Enter the 6-character room code."); return; }
     const result = await client.rpc("gkeet_join_room_by_code", { p_code: code, p_player_name: name });
     if (result.error) { roomMessage("Join failed: " + result.error.message); return; }
