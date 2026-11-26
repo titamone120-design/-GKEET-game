@@ -31,7 +31,7 @@ jobs:
         run: |
           set -euo pipefail
           curl -L --fail --retry 3 \
-            "https://kinemiq.app/studio/clips/kick.glb" \
+            "https://kinemiq.app/wp-content/kinemiq-app/library/clips/kick.glb" \
             -o /tmp/gkeet-cc0-assets/Kick.glb
           file /tmp/gkeet-cc0-assets/Kick.glb
           test -s /tmp/gkeet-cc0-assets/Kick.glb
