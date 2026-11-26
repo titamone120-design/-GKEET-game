@@ -36,6 +36,7 @@ const server = http.createServer((req, res) => {
     await page.waitForFunction(() => document.querySelector('#game').classList.contains('active'));
     assert.equal(await page.locator('#stageLabel').textContent(), '01');
     await page.waitForFunction(() => window.__gkeetRigCount === 2, null, { timeout: 15000 });
+    await page.screenshot({ path: '/tmp/gkeet-gameplay.png' });
 
     const before = Number(await page.locator('#timer').textContent());
     await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 });
