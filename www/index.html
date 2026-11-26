@@ -157,7 +157,7 @@ function init3D(){
    const loader=new THREE.GLTFLoader();
    loader.load('models/KinemIQ_Mannequin.glb',(gltf)=>{
     const rig=gltf.scene;rig.scale.setScalar(1.72);const bounds=new THREE.Box3().setFromObject(rig);rig.position.y-=bounds.min.y;
-    rig.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material){o.material=o.material.clone();o.material.metalness=.12;o.material.roughness=.62;}}});
+    rig.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];const tinted=mats.map(m=>{const copy=m.clone();copy.metalness=.12;copy.roughness=.62;if(index===0){if(/Hair/i.test(copy.name))copy.color.setHex(0x4a2818);else if(/Eyes/i.test(copy.name))copy.color.setHex(0x42d9ee);else copy.color.setHex(0x238bb1);}return copy;});o.material=Array.isArray(o.material)?tinted:tinted[0];}}});
     const actor=new THREE.Group();actor.add(rig);actor.userData.isRigged=true;actor.userData.currentAnim='';
     actor.position.x=index===0?-4:4;actor.rotation.y=index===0?Math.PI/2:-Math.PI/2;
     const previous=actors3d[index];scene3d.remove(previous);disposeActor(previous);scene3d.add(actor);actors3d[index]=actor;window.__gkeetRigCount=(window.__gkeetRigCount||0)+1;
