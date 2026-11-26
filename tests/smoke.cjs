@@ -58,7 +58,7 @@ const server = http.createServer((req, res) => {
     try {
       await page.waitForFunction((previous) => Number(document.querySelector('#timer').textContent) < Number(previous), pausedAt, { timeout: 7000 });
     } catch (error) {
-      console.error('GKEET state after resume:', await page.evaluate(() => window.__gkeetDebug()));
+      console.error('GKEET state after resume:', await page.evaluate(() => window.__gkeetDebug()), 'page errors:', pageErrors);
       throw error;
     }
     assert.ok(Number(await page.locator('#timer').textContent()) < Number(pausedAt), 'timer should resume');
