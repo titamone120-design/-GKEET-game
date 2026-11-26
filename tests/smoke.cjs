@@ -66,12 +66,14 @@ const server = http.createServer((req, res) => {
     await page.waitForTimeout(80);
     assert.equal((await page.evaluate(() => window.__gkeetDebug())).playerGuard, false, 'keyboard guard should release');
 
-    const rightDashPad = page.locator('[data-key="right"]');
     const dashCountBefore = await page.evaluate(() => window.__gkeetDebug().playerDashCount);
-    await rightDashPad.click({ delay: 20 });
-    await page.waitForTimeout(80);
-    await rightDashPad.click({ delay: 20 });
-    await page.waitForFunction(before => window.__gkeetDebug().playerDashCount > before, dashCountBefore, { timeout: 1500 });
+    await page.evaluate(async () => {
+      const button = document.querySelector('[data-key="right"]');
+      const tap = (type, pointerId) => button.dispatchEvent(new PointerEvent(type, { pointerId, pointerType: 'touch', isPrimary: true, bubbles: true, cancelable: true }));
+      tap('pointerdown', 31); tap('pointerup', 31);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      tap('pointerdown', 32);
+    });
     const dashState = await page.evaluate(() => window.__gkeetDebug());
     assert.ok(dashState.playerDashCount > dashCountBefore, 'double-tap touch movement should activate dash: ' + JSON.stringify(dashState));
 
