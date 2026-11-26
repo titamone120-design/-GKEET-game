@@ -40,6 +40,19 @@ jobs:
           echo "Quaternius UAL2 GLB files:"
           find /tmp/ual2-standard -type f -iname '*.glb' -printf '%p %s bytes\n'
 
+      - name: Download Quaternius Universal Animation Library 1 (CC0)
+        run: |
+          set -euo pipefail
+          curl -sSL --fail -X POST \
+            "https://quaternius.itch.io/universal-animation-library/file/17958403?source=game_download&as_props=1" \
+            -o /tmp/ual1-response.json
+          download_url="$(jq -er '.url' /tmp/ual1-response.json)"
+          curl -L --fail --retry 3 "$download_url" -o /tmp/ual1-standard.zip
+          mkdir -p /tmp/ual1-standard
+          unzip -q /tmp/ual1-standard.zip -d /tmp/ual1-standard
+          echo "Quaternius UAL1 GLB files:"
+          find /tmp/ual1-standard -type f -iname '*.glb' -printf '%p %s bytes\n'
+
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
           set -euo pipefail
