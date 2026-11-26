@@ -39,7 +39,12 @@ const server = http.createServer((req, res) => {
     await page.screenshot({ path: '/tmp/gkeet-gameplay.png' });
 
     const before = Number(await page.locator('#timer').textContent());
-    await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 });
+    try {
+      await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 });
+    } catch (error) {
+      console.error('GKEET state while timer should run:', await page.evaluate(() => window.__gkeetDebug()), 'page errors:', pageErrors);
+      throw error;
+    }
     const after = Number(await page.locator('#timer').textContent());
     assert.ok(after < before, 'fight timer should run while playing');
 
