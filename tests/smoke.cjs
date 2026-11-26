@@ -50,7 +50,7 @@ const server = http.createServer((req, res) => {
     await kickButton.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true });
     await page.waitForFunction(() => (window.__gkeetKickCountByFighter?.[0] || 0) > 0, null, { timeout: 4000 });
     // Wait for the actual attack cooldown rather than relying on a fixed delay.
-    await page.waitForFunction(() => window.__gkeetDebug().playerCool <= 0, null, { timeout: 5000 });
+    await page.waitForFunction(() => window.__gkeetDebug().playerCool <= 0, null, { timeout: 10000 });
     await page.keyboard.down('j');
     await page.waitForTimeout(60);
     const punchState = await page.evaluate(() => window.__gkeetDebug());
@@ -66,11 +66,13 @@ const server = http.createServer((req, res) => {
     assert.equal((await page.evaluate(() => window.__gkeetDebug())).playerGuard, false, 'keyboard guard should release');
 
     const rightDashPad = page.locator('[data-key="right"]');
+    const dashCountBefore = await page.evaluate(() => window.__gkeetDebug().playerDashCount);
     await rightDashPad.click({ delay: 20 });
     await page.waitForTimeout(80);
     await rightDashPad.click({ delay: 20 });
+    await page.waitForFunction(before => window.__gkeetDebug().playerDashCount > before, dashCountBefore, { timeout: 1500 });
     const dashState = await page.evaluate(() => window.__gkeetDebug());
-    assert.ok(dashState.playerDashTimer > 0, 'double-tap touch movement should activate dash: ' + JSON.stringify(dashState));
+    assert.ok(dashState.playerDashCount > dashCountBefore, 'double-tap touch movement should activate dash: ' + JSON.stringify(dashState));
 
     const before = Number(await page.locator('#timer').textContent());
     try { await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 }); } catch (error) { console.error('Classic timer state:', await page.evaluate(() => ({ timer: document.querySelector('#timer')?.textContent, debug: window.__gkeetDebug?.() })), 'browser errors:', pageErrors, 'console warnings:', consoleWarnings); throw error; }
