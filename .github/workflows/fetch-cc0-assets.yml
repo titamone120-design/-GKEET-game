@@ -95,7 +95,7 @@ jobs:
           set -euo pipefail
           curl -L --fail "https://kinemiq.app/studio/data/catalog.json" -o /tmp/kinemiq-catalog.json
           echo "Matching combat clips:"
-          jq -r '.clips[] | select(((.id // "") + " " + (.name_en // "") + " " + (.name // "") + " " + ((.keywords // []) | join(" "))) | test("kick"; "i")) | [.id, (.name_en // .name // ""), .file, (.licence // .license // "")] | @tsv' /tmp/kinemiq-catalog.json
+          jq -r '.clips[] | select(((.id // "") + " " + (.name_en // "") + " " + (.name // "") + " " + ((.keywords // []) | join(" "))) | test("kick"; "i")) | [.id, (.name_en // .name // ""), .file, ((.licence // .license // "") | tostring)] | @tsv' /tmp/kinemiq-catalog.json
           echo "Catalog size: $(wc -c < /tmp/kinemiq-catalog.json) bytes"
 
       - name: Install Three.js and add rigged model, combat clips and loader
