@@ -41,6 +41,14 @@ jobs:
       - name: Run GKEET browser gameplay smoke test
         run: npm run test:smoke
 
+      - name: Upload gameplay screenshot for visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GKEET-Gameplay-Screenshot
+          path: /tmp/gkeet-gameplay.png
+          if-no-files-found: ignore
+
       - name: Validate game JavaScript
         run: |
           node <<'NODE'
