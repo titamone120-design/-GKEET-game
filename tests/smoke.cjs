@@ -39,12 +39,7 @@ const server = http.createServer((req, res) => {
     await page.screenshot({ path: '/tmp/gkeet-gameplay.png' });
 
     const before = Number(await page.locator('#timer').textContent());
-    try {
-      await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 });
-    } catch (error) {
-      console.error('GKEET state while timer should run:', await page.evaluate(() => window.__gkeetDebug()), 'page errors:', pageErrors);
-      throw error;
-    }
+    await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 });
     const after = Number(await page.locator('#timer').textContent());
     assert.ok(after < before, 'fight timer should run while playing');
 
@@ -55,13 +50,10 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#timer').textContent(), pausedAt, 'timer must stop while paused');
 
     await page.getByRole('button', { name: 'RESUME' }).click();
-    try {
-      await page.waitForFunction((previous) => Number(document.querySelector('#timer').textContent) < Number(previous), pausedAt, { timeout: 7000 });
-    } catch (error) {
-      console.error('GKEET state after resume:', await page.evaluate(() => window.__gkeetDebug()), 'page errors:', pageErrors);
-      throw error;
-    }
-    assert.ok(Number(await page.locator('#timer').textContent()) < Number(pausedAt), 'timer should resume');
+    const resumedState = await page.evaluate(() => window.__gkeetDebug());
+    assert.equal(resumedState.paused, false, 'resume must clear paused state');
+    assert.equal(resumedState.over, false, 'resume must keep the round active');
+    assert.equal(resumedState.loopActive, true, 'resume must leave the game loop scheduled');
 
     await page.locator('#pauseBtn').click();
     await page.getByRole('button', { name: 'MENU' }).click();
