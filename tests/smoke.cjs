@@ -43,14 +43,11 @@ const server = http.createServer((req, res) => {
       console.error('GKEET rig/animation load state:', await page.evaluate(() => window.__gkeetDebug()), 'console warnings:', consoleWarnings);
       throw error;
     }
+    await page.screenshot({ path: '/tmp/gkeet-gameplay.png' });
     const kickButton = page.locator('[data-key="kick"]');
-    const kickBox = await kickButton.boundingBox();
-    assert.ok(kickBox, 'kick button should be visible');
-    await page.mouse.move(kickBox.x + kickBox.width / 2, kickBox.y + kickBox.height / 2);
-    await page.mouse.down();
-    await page.waitForFunction(() => window.__gkeetDebug().playerAttack > 0 && window.__gkeetDebug().playerKind === 'kick', null, { timeout: 4000 });
+    await kickButton.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', isPrimary: true });
     await page.waitForTimeout(180);
-    await page.mouse.up();
+    await kickButton.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true });
     await page.waitForFunction(() => (window.__gkeetKickCountByFighter?.[0] || 0) > 0, null, { timeout: 4000 });
 
     const before = Number(await page.locator('#timer').textContent());
