@@ -137,6 +137,7 @@ const server = http.createServer((req, res) => {
       window.gkeetOnline = {
         active: true,
         getRemotePlayers: () => [{ user_id: 'test-opponent', x: state.x + 85, y: state.y, face: -1, hp: 100, player_name: 'Opponent' }],
+        resetRemotePlayers: () => {},
         sendState: async () => {},
         sendShot: async () => {},
         sendMatchResult: async () => {},
