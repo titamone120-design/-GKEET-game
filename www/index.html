@@ -168,7 +168,7 @@ function init3D(){
     const previous=actors3d[index];scene3d.remove(previous);disposeActor(previous);scene3d.add(actor);actors3d[index]=actor;window.__gkeetRigCount=(window.__gkeetRigCount||0)+1;
     fighterMixers[index]=new THREE.AnimationMixer(rig);
     if(gltf.animations&&gltf.animations[0])fighterClips[index].idle=gltf.animations[0];
-    const clips={idle:'Idle_relaxed',walk:'Walk_forwards',punch:'Punch_jab_left_2',kick:'Punch_cross_right_2',special:'Punch_hook_right_2',hit:'Hit_knockback',jump:'Jump_in_the_air',dash:'Dodge_roll',guard:'Idle_relaxed'};
+    const clips={idle:'Idle_relaxed',walk:'Walk_forwards',punch:'Punch_jab_left_2',kick:'Punch_cross_right_2',special:'Punch_hook_right_2',hit:'Hit_knockback',jump:'Jump_in_the_air',dash:'Dodge_roll',guard:'Idle_arms_folded_waiting'};
     Object.entries(clips).forEach(([key,file])=>loader.load('models/'+file+'.glb',(clipGltf)=>{if(clipGltf.animations&&clipGltf.animations[0]){fighterClips[index][key]=clipGltf.animations[0];window.__gkeetAnimationCount=(window.__gkeetAnimationCount||0)+1;if(key==='idle'&&actors3d[index]&&actors3d[index].userData.currentAnim==='idle')actors3d[index].userData.currentAnim='';}},undefined,(err)=>console.warn('GKEET animation unavailable:',file,err)));
     if(index===1)window.setGkeetEnemyVariant(stage);
    },undefined,(err)=>console.warn('GKEET rigged fighter unavailable; using built-in 3D fighter.',err));
