@@ -68,8 +68,6 @@ const server = http.createServer((req, res) => {
 
     const dashCountBefore = await page.evaluate(() => window.__gkeetDebug().playerDashCount);
     await page.evaluate(() => window.__gkeetTestDashTap('right'));
-    await page.waitForTimeout(100);
-    await page.evaluate(() => window.__gkeetTestDashTap('right'));
     const dashState = await page.evaluate(() => window.__gkeetDebug());
     assert.ok(dashState.playerDashCount > dashCountBefore, 'double-tap movement should activate dash: ' + JSON.stringify(dashState));
 
