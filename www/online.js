@@ -9,7 +9,7 @@
   function refreshAuth() {
     $("onlineAuth").hidden = !!session;
     $("onlineLobby").hidden = !session;
-    if (session) $("onlineUserLabel").textContent = "Signed in as " + (session.user.email || "GKEET player");
+    if (session) { $("onlineUserLabel").textContent = "Signed in as " + (session.user.email || "GKEET player"); if (!$("lobbyPlayerName").value) $("lobbyPlayerName").value = session.user.user_metadata?.display_name || "Player"; }
   }
   function renderPlayers(players) {
     const box = $("onlinePlayers");
@@ -52,7 +52,7 @@
     channel.on("broadcast", { event: "room_refresh" }, loadMembers);
     channel.subscribe(async (status) => {
       if (status === "SUBSCRIBED") {
-        await channel.track({ user_id: session.user.id, player_name: $("onlineName").value.trim() || "Player" });
+        await channel.track({ user_id: session.user.id, player_name: $("lobbyPlayerName").value.trim() || session.user.user_metadata?.display_name || "Player" });
         roomMessage("LIVE LOBBY CONNECTED • Share the code with friends.");
       } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
         roomMessage("Realtime connection failed. Check room access and Realtime settings.");
