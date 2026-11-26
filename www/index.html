@@ -186,7 +186,18 @@ function init3D(){
  }catch(err){console.warn('3D renderer unavailable',err);if(renderer3d){renderer3d.domElement.remove();renderer3d=null}canvas.style.display='block'}
 }
 function playRigAnimation(index,name){const mixer=fighterMixers[index],clip=fighterClips[index][name];if(!mixer||!clip)return;const old=fighterActions[index],action=mixer.clipAction(clip);if(old===action&&action.isRunning())return;action.reset();const looping=name==="idle"||name==="walk"||name==="guard";action.setLoop(looping?THREE.LoopRepeat:THREE.LoopOnce,looping?Infinity:1);action.clampWhenFinished=!looping;action.timeScale=name==="walk"?1.15:name==="punch"||name==="kick"||name==="special"?1.65:name==="hit"?1.35:1;action.fadeIn(.09).play();if(old&&old!==action)old.fadeOut(.09);fighterActions[index]=action;actors3d[index].userData.currentAnim=name;if(name==='kick'){window.__gkeetKickCount=(window.__gkeetKickCount||0)+1;window.__gkeetKickCountByFighter=window.__gkeetKickCountByFighter||[0,0];window.__gkeetKickCountByFighter[index]++;}}
-function applyStageTheme(n){if(!scene3d)return;const themes=[{bg:0x090b20,fog:0x090b20,glow:0x25cfff},{bg:0x250b16,fog:0x35101b,glow:0xff4b55},{bg:0x071b30,fog:0x0c2940,glow:0x54dcff},{bg:0x201027,fog:0x2c1638,glow:0xffbd58}];const t=themes[Math.floor((n-1)/5)%themes.length];scene3d.background.setHex(t.bg);if(scene3d.fog)scene3d.fog.color.setHex(t.fog);scene3d.traverse(o=>{if(o.isPointLight)o.color.setHex(t.glow);if(o.geometry&&o.geometry.type==='TorusGeometry'&&o.material&&o.material.color)o.material.color.setHex(t.glow)});}
+function applyStageTheme(n){if(!scene3d)return;const themes=[
+ {bg:0x090b20,fog:0x090b20,glow:0x25cfff},{bg:0x250b16,fog:0x35101b,glow:0xff4b55},
+ {bg:0x071b30,fog:0x0c2940,glow:0x54dcff},{bg:0x201027,fog:0x2c1638,glow:0xffbd58},
+ {bg:0x101d16,fog:0x1c3525,glow:0x73ff9b},{bg:0x21130a,fog:0x382312,glow:0xffa34d},
+ {bg:0x10102b,fog:0x211b4a,glow:0x9a7bff},{bg:0x071e25,fog:0x0d3440,glow:0x43f2d5},
+ {bg:0x260b24,fog:0x3b1238,glow:0xff58c7},{bg:0x1c1b0a,fog:0x343116,glow:0xf4e45b},
+ {bg:0x0a1424,fog:0x142c48,glow:0x4b9dff},{bg:0x260e0b,fog:0x451a14,glow:0xff7655},
+ {bg:0x171020,fog:0x302044,glow:0xd78aff},{bg:0x071b1a,fog:0x103632,glow:0x58ffd0},
+ {bg:0x1d1010,fog:0x3c2020,glow:0xffb078},{bg:0x0b1025,fog:0x17234b,glow:0x7cafff},
+ {bg:0x20180a,fog:0x3b2b12,glow:0xffd45e},{bg:0x200b17,fog:0x40132b,glow:0xff6d9e},
+ {bg:0x101d0b,fog:0x233c17,glow:0xb3ff63},{bg:0x171717,fog:0x303030,glow:0xffffff}
+ ];const t=themes[(Math.max(1,Math.min(20,n))-1)%themes.length];scene3d.background.setHex(t.bg);if(scene3d.fog)scene3d.fog.color.setHex(t.fog);scene3d.traverse(o=>{if(o.isPointLight)o.color.setHex(t.glow);if(o.geometry&&o.geometry.type==='TorusGeometry'&&o.material&&o.material.color)o.material.color.setHex(t.glow)});}
 function draw3D(){
  if(!renderer3d)return false;
  const scale=14/Math.max(1,W),toX=x=>(x-W/2)*scale,now=performance.now()*.006;
