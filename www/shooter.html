@@ -105,7 +105,7 @@ const weapons=[{name:'ASSAULT',damage:24,rate:170,speed:13,mag:30},{name:'SMG',d
 function resize(){let d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;c.setTransform(d,0,0,d,0,0);ground=H*.77}addEventListener('resize',resize);resize();
 function screen(id){['home','maps','onlinePanel','armory','game'].forEach(k=>$(k).classList.remove('on'));$(id).classList.add('on')}
 function buildMaps(){let g=$('mapGrid');g.innerHTML='';maps.forEach((m,i)=>{let b=document.createElement('button');b.textContent=(i+1<=unlocked?'':'🔒 ')+(i+1)+'\n'+m[0];b.disabled=i+1>unlocked;b.onclick=()=>start(i+1,false);g.append(b)})}
-function start(n,practice){level=n;if(window.gkeetOnline?.active)window.gkeetOnline.resetRemotePlayers();wave=1;training=practice;kills=0;score=0;combo=0;headshots=0;comboUntil=0;ammo=weapons[weapon].mag;reserve=120;reloading=false;paused=false;ended=false;bullets=[];grenades=[];particles=[];pickups=[];enemies=[];keys={};respawns=1;respawnAt=0;invulnerableUntil=0;grenadeAt=0;cam=0;worldWidth=12000;player.x=90;player.y=ground-4;player.vx=0;player.vy=0;player.hp=100;player.face=1;player.onGround=true;player.stance='stand';player.dodgeUntil=0;$('stanceBtn').textContent='STAND';platforms=[];for(let i=0;i<22;i++){let x=360+i*520;platforms.push({x,y:ground-90-(i%4)*42,w:110+(i%3)*35,h:14})}let squad=practice?2:12+Math.min(n,8);for(let i=0;i<squad;i++)spawnEnemy(650+i*850+(i%3)*120);$('mapName').textContent='ZONE '+String(n).padStart(2,'0')+' • WAVE 1/'+(practice?1:wavesPerZone);$('overlay').classList.remove('on');screen('game');last=performance.now();loop(last)}
+function start(n,practice){level=n;if(window.gkeetOnline?.active)window.gkeetOnline.resetRemotePlayers();wave=1;training=practice;kills=0;score=0;combo=0;headshots=0;comboUntil=0;ammo=weapons[weapon].mag;reserve=120;reloading=false;paused=false;ended=false;bullets=[];grenades=[];particles=[];pickups=[];enemies=[];keys={};respawns=1;respawnAt=0;invulnerableUntil=0;grenadeAt=0;cam=0;worldWidth=12000;player.x=90;player.y=ground-4;player.vx=0;player.vy=0;player.hp=100;player.face=1;player.onGround=true;player.stance='stand';player.dodgeUntil=0;$('stanceBtn').textContent='STAND';platforms=[];let squad=practice?2:12+Math.min(n,8);for(let i=0;i<squad;i++)spawnEnemy(650+i*850+(i%3)*120);$('mapName').textContent='ZONE '+String(n).padStart(2,'0')+' • WAVE 1/'+(practice?1:wavesPerZone);$('overlay').classList.remove('on');screen('game');last=performance.now();loop(last)}
 const player={x:90,y:0,vx:0,vy:0,hp:100,face:1,onGround:false,stance:'stand',dodgeUntil:0};
 // Read-only state snapshot for automated gameplay QA.
 window.__gkeetShooterDebug=()=>({x:player.x,y:player.y,vy:player.vy,ground,onGround:player.onGround,hp:player.hp,ammo,reserve,enemyCount:enemies.filter(e=>!e.dead).length,bulletCount:bullets.length,wave,level,paused,ended,last,now:performance.now(),visibility:document.visibilityState,raf,platforms:platforms.map(p=>({x:p.x,y:p.y,w:p.w}))});
@@ -152,17 +152,23 @@ if(player.hp<=0){if(respawns>0&&!respawnAt){respawns--;respawnAt=performance.now
 function finish(win){if(ended)return;ended=true;if(window.gkeetOnline?.active)window.gkeetOnline.sendMatchResult({win,score,kills});if(win){unlocked=Math.max(unlocked,Math.min(20,level+1));localStorage.gkeetShooterUnlocked=unlocked;$('result').textContent=level===20?'GKEET CHAMPION!':'ZONE CLEARED!';$('message').textContent=(level===20?'Final arena conquered! You completed the GKEET campaign. ':'All '+(training?'training targets':'3 waves')+' cleared! ')+kills+' enemies defeated, '+headshots+' headshots, score: '+score+'. '+(level<20?'Next zone unlocked.':'Campaign complete!');$('resume').textContent=level<20?'NEXT ZONE':'PLAY AGAIN';$('resume').onclick=()=>start(level<20?level+1:20,false)}else{$('result').textContent='MISSION FAILED';$('message').textContent='Reload, move and use cover. Try again!';$('resume').textContent='RETRY';$('resume').onclick=()=>start(level,false)}$('overlay').classList.add('on')}
 function draw(){let pal=maps[level-1],sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,pal[1]);sky.addColorStop(1,pal[2]);c.fillStyle=sky;c.fillRect(0,0,W,H);c.save();c.translate(-cam,0);
 for(let i=0;i<Math.ceil(worldWidth/150);i++){let x=i*150;c.fillStyle=i%2?'#ffffff0b':'#00000020';c.fillRect(x,80+(i*37%180),70,ground-80)}
-// open outdoor battlefield: rolling hills, sunlight and a tree line
-c.fillStyle='#ffe6a0';c.beginPath();c.arc(cam+W*.82,Math.max(76,H*.18),Math.max(28,H*.055),0,Math.PI*2);c.fill();
-c.fillStyle='#315d48';c.beginPath();c.moveTo(cam,ground-105);for(let hx=0;hx<=W+80;hx+=80)c.lineTo(cam+hx,ground-95-((Math.sin((cam+hx)*.0017)+1)*34));c.lineTo(cam+W,ground);c.lineTo(cam,ground);c.closePath();c.fill();
-c.fillStyle='#244b3b';c.beginPath();c.moveTo(cam,ground-62);for(let hx=0;hx<=W+80;hx+=80)c.lineTo(cam+hx,ground-48-((Math.sin((cam+hx)*.0031+1.4)+1)*24));c.lineTo(cam+W,ground);c.lineTo(cam,ground);c.closePath();c.fill();
-for(let i=0;i<Math.ceil(worldWidth/230);i++){let x=i*230+75,treeH=48+(i*37%42),trunk=treeH*.42;c.fillStyle='#59432b';c.fillRect(x-4,ground-trunk,8,trunk);c.fillStyle=i%2?'#24583b':'#2f7045';c.beginPath();c.arc(x,ground-treeH,treeH*.34,0,Math.PI*2);c.arc(x-treeH*.2,ground-treeH*.72,treeH*.25,0,Math.PI*2);c.arc(x+treeH*.2,ground-treeH*.72,treeH*.25,0,Math.PI*2);c.fill();c.fillStyle='#6d9a4b';c.beginPath();c.arc(x-treeH*.1,ground-treeH*.92,treeH*.12,0,Math.PI*2);c.fill()}
-c.fillStyle='#365c39';c.fillRect(cam,ground,W+cam,H-ground);c.fillStyle='#71934b';c.fillRect(cam,ground,W+cam,4);
-for(let i=0;i<Math.ceil(worldWidth/95);i++){let gx=i*95+((i*29)%42);c.strokeStyle=i%2?'#8eb45b':'#547f42';c.lineWidth=2;c.beginPath();c.moveTo(gx,ground+4);c.lineTo(gx-3,ground-5-(i%4));c.moveTo(gx+4,ground+3);c.lineTo(gx+8,ground-3-(i%3));c.stroke()}
-for(let p of platforms){c.fillStyle='#172b3b';c.fillRect(p.x,p.y,p.w,p.h);c.fillStyle=pal[3];c.fillRect(p.x,p.y,p.w,4);c.fillStyle='#0005';c.fillRect(p.x,p.y+14,p.w,5)}
-// natural cover: rocks and low bushes in the outdoor field
-for(let i=0;i<Math.ceil(worldWidth/430);i++){let x=i*430+190;c.fillStyle='#59614b';c.beginPath();c.ellipse(x-cam,ground-7,18,9,0,Math.PI,Math.PI*2);c.fill();c.fillStyle='#35613a';c.beginPath();c.arc(x+22-cam,ground-12,13,Math.PI,Math.PI*2);c.fill();c.arc(x+34-cam,ground-9,10,Math.PI,Math.PI*2);c.fill()}
- // bright glowing bullet tracers
+// GKEET OPEN PLAIN ARENA: flat, wide, uncluttered sandy battlefield
+c.fillStyle='#dceaf0';c.fillRect(cam,0,W,H);
+const horizon=ground-78;
+const haze=c.createLinearGradient(0,horizon-100,0,ground);
+haze.addColorStop(0,'#dceaf0');haze.addColorStop(1,'#b9cbd0');
+c.fillStyle=haze;c.fillRect(cam,horizon-100,W,100);
+c.fillStyle='#c9bda0';c.fillRect(cam,horizon,W,H-horizon);
+c.fillStyle='#e0d2ad';c.fillRect(cam,ground,W,H-ground);
+c.fillStyle='#b8a77f';c.fillRect(cam,ground,W,3);
+// distant flat horizon markers and subtle ground texture; no hills, trees or buildings
+for(let i=0;i<Math.ceil(worldWidth/170);i++){
+ const x=i*170+((i*43)%65);
+ c.strokeStyle=i%2?'#b8a77b':'#c7b78f';c.lineWidth=1.4;
+ c.beginPath();c.moveTo(x-cam,ground+18+(i%4)*17);c.lineTo(x+24-cam,ground+16+(i%4)*17);c.stroke();
+ c.fillStyle='#c0ad83';c.beginPath();c.ellipse(x+75-cam,ground+42+(i%3)*25,12,2,0,0,Math.PI*2);c.fill();
+}
+// bright glowing bullet tracers
 for(let b of bullets){let sx=b.x-cam,sy=b.y,angle=Math.atan2(b.vy,b.vx),length=b.enemy?15:25;c.save();c.translate(sx,sy);c.rotate(angle);c.strokeStyle=b.enemy?'#ff5252':'#fff2a0';c.lineWidth=b.enemy?4:5;c.lineCap='round';c.shadowColor=b.enemy?'#ff3028':'#ffb52e';c.shadowBlur=18;c.beginPath();c.moveTo(-length*.65,0);c.lineTo(length*.55,0);c.stroke();c.strokeStyle=b.enemy?'#ffaaa0':'#ffffff';c.lineWidth=1.5;c.beginPath();c.moveTo(-length*.4,0);c.lineTo(length*.4,0);c.stroke();c.restore()}c.shadowBlur=0;for(let p of pickups){c.save();c.translate(p.x-cam,p.y);c.fillStyle=p.type==='health'?'#27e58b':'#ffd35c';c.shadowColor=c.fillStyle;c.shadowBlur=14;c.beginPath();c.arc(0,0,11,0,Math.PI*2);c.fill();c.shadowBlur=0;c.fillStyle='#102033';c.font='bold 14px Arial';c.textAlign='center';c.fillText(p.type==='health'?'+':'A',0,5);c.restore()}
 function soldier(x,y,face,foe,hp,max,boss=false,remote=false,remoteName='ONLINE'){
  c.save();c.translate(x,y);c.scale(face,1);if(!foe&&!remote){if(player.stance==='crouch'){c.translate(0,9);c.scale(1,.78)}else if(player.stance==='prone'){c.rotate(Math.PI/2);c.scale(.78,.78)}}if(boss)c.scale(1.22,1.22);
@@ -171,14 +177,20 @@ function soldier(x,y,face,foe,hp,max,boss=false,remote=false,remoteName='ONLINE'
  const shirt=foe?'#8e3548':remote?'#247d83':outfit.shirt,pants=foe?'#402735':remote?'#174d57':outfit.pants,vest=foe?'#552b38':remote?'#15515a':outfit.vest,accent=foe?'#f07883':remote?'#7cf0dc':outfit.accent,skin=foe?'#b9785b':'#a96f50',boot='#171d22';
  // soft ground shadow
  c.fillStyle='#0007';c.beginPath();c.ellipse(0,1,23,5,0,0,Math.PI*2);c.fill();
- // legs: articulated trousers, knees, seams and boots
+ // clearly separated legs: thighs, knees, shins and grounded combat boots
  c.lineCap='round';c.lineJoin='round';
- c.strokeStyle=pants;c.lineWidth=9;c.beginPath();c.moveTo(-5,-25+bob);c.lineTo(-7+step,-13+bob);c.lineTo(-11+step,-5);c.moveTo(5,-25+bob);c.lineTo(7-step,-13+bob);c.lineTo(11-step,-5);c.stroke();
- c.strokeStyle=foe?'#a75b68':'#71816b';c.lineWidth=1.5;c.beginPath();c.moveTo(-7+step,-16+bob);c.lineTo(-9+step,-12+bob);c.moveTo(7-step,-16+bob);c.lineTo(9-step,-12+bob);c.stroke();
- c.fillStyle=vest;c.fillRect(-11+step,-11+bob,7,4);c.fillRect(4-step,-11+bob,7,4);
- c.fillStyle=boot;c.beginPath();c.roundRect(-18+step,-7,14,7,2);c.roundRect(5-step,-7,14,7,2);c.fill();
- c.fillStyle='#6c7775';c.fillRect(-16+step,-3,10,1);c.fillRect(7-step,-3,10,1);
- c.fillStyle=accent;c.fillRect(-17+step,-7,3,3);c.fillRect(13-step,-7,3,3);
+ const stride=step, kneeL=-7+stride, kneeR=7-stride, ankleL=-8+stride*.65, ankleR=8-stride*.65;
+ c.strokeStyle=pants;c.lineWidth=8.5;c.beginPath();
+ c.moveTo(-5,-27+bob);c.lineTo(kneeL,-16+bob);c.lineTo(ankleL,-7);
+ c.moveTo(5,-27+bob);c.lineTo(kneeR,-16+bob);c.lineTo(ankleR,-7);c.stroke();
+ c.strokeStyle=foe?'#b66a75':'#819276';c.lineWidth=1.4;c.beginPath();
+ c.moveTo(kneeL-2,-16+bob);c.lineTo(kneeL+2,-15+bob);
+ c.moveTo(kneeR-2,-16+bob);c.lineTo(kneeR+2,-15+bob);c.stroke();
+ c.fillStyle=vest;c.fillRect(kneeL-3,-17+bob,6,3);c.fillRect(kneeR-3,-17+bob,6,3);
+ c.fillStyle=boot;c.beginPath();
+ c.roundRect(ankleL-7,-8,14,7,2);c.roundRect(ankleR-7,-8,14,7,2);c.fill();
+ c.fillStyle='#8b9690';c.fillRect(ankleL-5,-3,9,1.2);c.fillRect(ankleR-5,-3,9,1.2);
+ c.fillStyle=accent;c.fillRect(ankleL-5,-8,3,2.5);c.fillRect(ankleR+2,-8,3,2.5);
  // torso and shoulders, shaped like a human upper body
  c.fillStyle=shirt;c.beginPath();c.moveTo(-8,-54+bob);c.quadraticCurveTo(-13,-52+bob,-15,-44+bob);c.lineTo(-12,-27+bob);c.quadraticCurveTo(0,-23+bob,12,-27+bob);c.lineTo(15,-44+bob);c.quadraticCurveTo(13,-52+bob,8,-54+bob);c.closePath();c.fill();
  // collar and neck
