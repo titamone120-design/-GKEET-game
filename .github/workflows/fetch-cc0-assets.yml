@@ -53,6 +53,16 @@ jobs:
           echo "Quaternius UAL1 GLB files:"
           find /tmp/ual1-standard -type f -iname '*.glb' -printf '%p %s bytes\n'
 
+      - name: Inspect public CC0 kick animation export metadata
+        run: |
+          set -euo pipefail
+          curl -L --fail "https://kinemiq.app/animations/kick/" -o /tmp/kinemiq-kick.html
+          curl -L --fail "https://kinemiq.app/studio/?how=new&use=k:kick" -o /tmp/kinemiq-studio-kick.html
+          echo "Kick page asset and API references:"
+          grep -Eo 'https?[^" ]+|[^" ]+\\.glb[^" ]*|[^" ]+kick[^" ]*' /tmp/kinemiq-kick.html | head -80 || true
+          echo "Studio export references:"
+          grep -Eo 'https?[^" ]+|[^" ]+\\.glb[^" ]*|[^" ]+export[^" ]*' /tmp/kinemiq-studio-kick.html | head -80 || true
+
       - name: Install Three.js and add rigged model, combat clips and loader
         run: |
           set -euo pipefail
