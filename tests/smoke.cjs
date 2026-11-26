@@ -23,7 +23,7 @@ const server = http.createServer((req, res) => {
   const address = server.address();
   const browser = await chromium.launch({
     headless: true,
-    args: ['--no-sandbox', '--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader']
+    args: ['--no-sandbox', '--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--disable-frame-rate-limit']
   });
   const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
   const pageErrors = [];
@@ -35,6 +35,7 @@ const server = http.createServer((req, res) => {
     await page.locator('#playBtn').click();
     await page.waitForFunction(() => document.querySelector('#game').classList.contains('active'));
     assert.equal(await page.locator('#stageLabel').textContent(), '01');
+    await page.waitForFunction(() => window.__gkeetRigCount === 2, null, { timeout: 15000 });
 
     const before = Number(await page.locator('#timer').textContent());
     await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 });
@@ -57,7 +58,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#levelGrid button').count(), 20, 'all 20 stage slots should render');
 
     assert.deepEqual(pageErrors, [], 'browser must not report uncaught JavaScript errors');
-    console.log('GKEET smoke test passed: launch, fight loop, pause/resume, and 20-stage menu.');
+    console.log('GKEET smoke test passed: launch, two rigged 3D fighters, fight loop, pause/resume, and 20-stage menu.');
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));
