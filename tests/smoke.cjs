@@ -38,7 +38,7 @@ const server = http.createServer((req, res) => {
     await page.waitForFunction(() => document.querySelector('#game').classList.contains('active'));
     assert.equal(await page.locator('#stageLabel').textContent(), '01');
     try {
-      await page.waitForFunction(() => window.__gkeetRigCount === 2 && window.__gkeetAnimationCount === 16, null, { timeout: 20000 });
+      await page.waitForFunction(() => window.__gkeetRigCount === 2 && window.__gkeetAnimationCount >= 18, null, { timeout: 20000 });
     } catch (error) {
       console.error('GKEET rig/animation load state:', await page.evaluate(() => window.__gkeetDebug()), 'console warnings:', consoleWarnings);
       throw error;
