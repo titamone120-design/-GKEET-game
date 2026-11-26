@@ -27,7 +27,7 @@ const server = http.createServer((req, res) => {
   page.on('pageerror', error => pageErrors.push(error.message));
   try {
     await page.goto('http://127.0.0.1:' + address.port + '/?test=1', { waitUntil: 'load' });
-    await page.waitForURL('**/shooter.html');
+    await page.waitForFunction(() => location.pathname.endsWith('/shooter.html') && new URLSearchParams(location.search).has('test'));
     await page.locator('#choose').click();
     await page.waitForFunction(() => document.querySelector('#maps').classList.contains('on'));
     assert.equal(await page.locator('#mapGrid button').count(), 20, 'all 20 Battle Strike zones should be listed');
