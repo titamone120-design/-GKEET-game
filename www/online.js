@@ -57,6 +57,7 @@
     channel.on("broadcast", { event: "player_shot" }, ({ payload }) => { if (payload?.user_id !== session.user.id) window.gkeetReceiveRemoteShot?.(payload); });
     channel.on("broadcast", { event: "match_start" }, ({ payload }) => { if (payload?.map_id) window.gkeetStartOnlineMatch?.(payload.map_id); roomMessage("MATCH STARTED • Fight!"); });
     channel.on("broadcast", { event: "match_result" }, ({ payload }) => { roomMessage((payload?.win ? "Player cleared the zone" : "Player was defeated") + (Number.isFinite(payload?.score) ? " • Score " + payload.score : "")); });
+    channel.on("broadcast", { event: "room_closed" }, async () => { roomMessage("Room owner left. This room is closed."); await leaveRoom(); });
     channel.subscribe(async (status) => {
       if (status === "SUBSCRIBED") {
         await channel.track({ user_id: session.user.id, player_name: $("lobbyPlayerName").value.trim() || session.user.user_metadata?.display_name || "Player" });
@@ -116,6 +117,10 @@
     roomMessage("MATCH STARTED • Fight!");
   }
   async function leaveRoom() {
+    if (room && session && room.owner_id === session.user.id) {
+      if (channel) await channel.send({ type: "broadcast", event: "room_closed", payload: { at: Date.now() } });
+      await client.from("gkeet_rooms").update({ status: "closed" }).eq("id", room.id).eq("owner_id", session.user.id);
+    }
     if (channel) { await client.removeChannel(channel); channel = null; }
     remotePlayers.clear();
     if (room && session) await client.from("gkeet_room_members").delete().eq("room_id", room.id).eq("user_id", session.user.id);
