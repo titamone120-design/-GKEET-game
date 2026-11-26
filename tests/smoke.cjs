@@ -49,6 +49,27 @@ const server = http.createServer((req, res) => {
     await page.waitForTimeout(180);
     await kickButton.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true });
     await page.waitForFunction(() => (window.__gkeetKickCountByFighter?.[0] || 0) > 0, null, { timeout: 4000 });
+    await page.keyboard.down('j');
+    await page.waitForTimeout(60);
+    const punchState = await page.evaluate(() => window.__gkeetDebug());
+    assert.equal(punchState.playerAttackKind, 'punch', 'keyboard punch should trigger the punch move');
+    assert.ok(punchState.playerAttack > 0, 'punch animation should become active');
+    await page.keyboard.up('j');
+
+    await page.keyboard.down('h');
+    await page.waitForTimeout(80);
+    assert.equal((await page.evaluate(() => window.__gkeetDebug())).playerGuard, true, 'keyboard guard should activate');
+    await page.keyboard.up('h');
+    await page.waitForTimeout(80);
+    assert.equal((await page.evaluate(() => window.__gkeetDebug())).playerGuard, false, 'keyboard guard should release');
+
+    await page.keyboard.down('ArrowRight');
+    await page.keyboard.up('ArrowRight');
+    await page.waitForTimeout(90);
+    await page.keyboard.down('ArrowRight');
+    const dashState = await page.evaluate(() => window.__gkeetDebug());
+    assert.ok(dashState.playerDashTimer > 0, 'double-tap movement should activate dash');
+    await page.keyboard.up('ArrowRight');
 
     const before = Number(await page.locator('#timer').textContent());
     try { await page.waitForFunction(() => Number(document.querySelector('#timer').textContent) < 60, null, { timeout: 7000 }); } catch (error) { console.error('Classic timer state:', await page.evaluate(() => ({ timer: document.querySelector('#timer')?.textContent, debug: window.__gkeetDebug?.() })), 'browser errors:', pageErrors, 'console warnings:', consoleWarnings); throw error; }
