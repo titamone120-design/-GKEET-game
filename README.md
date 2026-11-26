@@ -13,8 +13,10 @@ A dedicated Supabase project is configured for GKEET only. The online lobby clie
 - Joining a room by invite code.
 - A maximum of six room members.
 - Private Realtime room channels and player presence.
+- Room owner can start a match after at least two players have joined.
+- Initial live gameplay sync broadcasts player positions and shots; received shots can damage the local player.
 
-**Important:** This is the online room/lobby foundation, not yet completed online multiplayer gameplay. Player movement, aiming, bullets, damage, match start/finish and network reconciliation still need implementation and testing before GKEET can be described as a playable online multiplayer game.
+**Important:** This is an early multiplayer gameplay integration, not yet a finished competitive online game. It still needs end-to-end tests with separate accounts/devices, authoritative hit/damage handling, disconnect cleanup, matchmaking, latency/interpolation work and complete match lifecycle validation before GKEET can be described as production-ready online multiplayer.
 
 The online lobby uses the GKEET Supabase project and its public publishable key. Never put a Supabase secret/service-role key in the app. The project uses authenticated-only table access and RLS policies. Email confirmation may be required depending on the Supabase Auth settings.
 
