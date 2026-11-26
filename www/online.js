@@ -87,6 +87,15 @@
     $("roomDetails").hidden = true;
     roomMessage("You left the room.");
   }
+  $("onlineBack").onclick = () => {
+    ["home", "maps", "onlinePanel", "game"].forEach((id) => $(id).classList.remove("on"));
+    $("home").classList.add("on");
+  };
+  $("online").onclick = () => {
+    ["home", "maps", "onlinePanel", "game"].forEach((id) => $(id).classList.remove("on"));
+    $("onlinePanel").classList.add("on");
+    refreshAuth();
+  };
   if (!window.supabase || !window.supabase.createClient) {
     authMessage("Online service could not load. Check your internet connection.");
     return;
