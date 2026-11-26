@@ -72,8 +72,21 @@ const server = http.createServer((req, res) => {
     await page.locator('#levelsBtn').click();
     assert.equal(await page.locator('#levelGrid button').count(), 20, 'all 20 stage slots should render');
 
+    // Exercise the separate Battle Strike shooter mode as well as the classic fighter.
+    await page.goto(`http://127.0.0.1:${address.port}/shooter.html`, { waitUntil: 'load' });
+    await page.locator('#quick').click();
+    await page.waitForFunction(() => document.querySelector('#game').classList.contains('on'));
+    assert.ok(await page.locator('#view').evaluate(el => el.width > 0 && el.height > 0), 'shooter canvas must be initialized');
+    const weaponBefore = await page.locator('#weaponBtn').textContent();
+    await page.locator('#weaponBtn').click();
+    assert.notEqual(await page.locator('#weaponBtn').textContent(), weaponBefore, 'weapon switch must change the selected weapon');
+    await page.locator('#pause').click();
+    assert.ok(await page.locator('#overlay').evaluate(el => el.classList.contains('on')), 'shooter pause overlay must open');
+    await page.locator('#resume').click();
+    assert.ok(!(await page.locator('#overlay').evaluate(el => el.classList.contains('on'))), 'shooter resume must close overlay');
+    await page.waitForTimeout(250);
     assert.deepEqual(pageErrors, [], 'browser must not report uncaught JavaScript errors');
-    console.log('GKEET smoke test passed: launch, two rigged 3D fighters, fight loop, pause/resume, and 20-stage menu.');
+    console.log('GKEET smoke test passed: classic fighter and Battle Strike launch, controls, pause/resume, and 20-stage menu.');
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));
