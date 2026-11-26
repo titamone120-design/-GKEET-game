@@ -27,6 +27,12 @@ Then open **Actions → Build GKEET Google Play AAB → Run workflow**. The sign
 
 **Never commit the keystore or its passwords to the repository.** Keep at least one secure offline backup; losing the upload key can delay future releases.
 
+## Publish the privacy policy
+
+The web-ready policy is at `docs/privacy-policy.html`. To publish it, open **GitHub → Repository Settings → Pages**, choose **Deploy from a branch**, select branch `main` and folder `/docs`, then save. Once GitHub Pages finishes deploying, use this policy URL in Play Console:
+
+`https://titamone120-design.github.io/-GKEET-game/privacy-policy.html`
+
 ## Before submitting to Play Console
 
 - Create/verify the Google Play developer account.
